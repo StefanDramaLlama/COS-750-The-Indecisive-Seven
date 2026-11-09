@@ -1,0 +1,27 @@
+{
+  "name": "graphwise-algorithm-studio",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Graphwise Algorithm Studio: step-through lessons for six CS2023 graph algorithms (COS 212 pre-lecture prototype).",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "build": "tsx scripts/build.ts",
+    "check": "tsc --noEmit && vitest run",
+    "test": "vitest run",
+    "migrate": "tsx scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Graphwise · Algorithm Studio</title>
+    <meta name="description" content="Step through six graph algorithms, then apply them yourself." />
+    <script>
+      // Apply a remembered theme before first paint to avoid a flash.
+      try {
+        var t = localStorage.getItem("gw-theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap"
+    />
+    <link rel="stylesheet" href="/assets/tokens.css" />
+    <link rel="stylesheet" href="/assets/studio.css" />
+  </head>
+  <body>
+    <a class="skip" href="#app">Skip to content</a>
+    <div class="shell">
+      <header class="topbar">
+        <button class="topbar__menu" type="button" aria-expanded="false" aria-controls="course-nav">
+          <span class="burger" aria-hidden="true"></span>
+          <span>Course</span>
+        </button>
+        <a class="wordmark" href="/">Graphwise</a>
+        <span class="topbar__course">COS 212 · Graphs</span>
+        <div class="theme" role="radiogroup" aria-label="Colour theme">
+          <button type="button" role="radio" data-theme-choice="system" aria-checked="true">System</button>
+          <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+          <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+        </div>
+      </header>
+
+      <nav id="course-nav" class="course-nav" aria-label="Course">
+        <ol class="course-nav__list">
+          <li><span class="course-nav__section is-muted">Graph Foundations <em>soon</em></span></li>
+          <li>
+            <a class="course-nav__section" href="/algorithms" data-nav="studio">Algorithm Studio</a>
+            <ol class="course-nav__lessons" data-lesson-nav></ol>
+          </li>
+          <li><span class="course-nav__section is-muted">Playground <em>soon</em></span></li>
+          <li><span class="course-nav__section is-muted">Code <em>soon</em></span></li>
+        </ol>
+        <p class="course-nav__foot">Pre-lecture prototype<br />COS 750 · The Indecisive Seven</p>
+      </nav>
+
+      <main id="app" tabindex="-1"></main>
+    </div>
+    <script type="module" src="/assets/studio.js"></script>
+  </body>
+</html>

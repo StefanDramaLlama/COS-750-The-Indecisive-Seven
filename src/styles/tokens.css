@@ -1,0 +1,71 @@
+/*
+ * Design tokens. Everything is monochrome for now: white paper, black ink.
+ * Colour arrives later by changing --accent / --success (and their -ink pairs)
+ * here only — components never hard-code a colour.
+ *   planned: light --accent #006B78, --success #166534
+ *            dark  --accent #52E5F4, --success #71E8A2
+ */
+:root {
+  color-scheme: light;
+
+  --paper: #ffffff;
+  --paper-2: #f6f6f3;       /* faint wash: code card, table heads */
+  --ink: #111110;           /* primary text and scaffolding */
+  --ink-2: #3b3b38;         /* secondary text */
+  --ink-3: #6e6e68;         /* muted labels (4.9:1 on white) */
+  --rule: #d6d6d0;          /* hairlines */
+  --rule-strong: #111110;   /* scaffolding lines */
+  --edge: #8f8f88;          /* idle graph edges */
+  --done-fill: #e4e4de;     /* settled / finished vertices */
+  --hatch: #c9c9c2;
+
+  --accent: var(--ink);       /* current step, active controls  → cyan later  */
+  --accent-ink: var(--paper); /* text on an accent fill */
+  --success: var(--ink);      /* completion, final result       → green later */
+  --success-ink: var(--paper);
+  --danger: var(--ink);       /* incorrect feedback */
+
+  --focus: var(--ink);
+
+  --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --step: 180ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #121211;
+    --paper-2: #1b1b19;
+    --ink: #f1f1ec;
+    --ink-2: #c9c9c2;
+    --ink-3: #9a9a93;
+    --rule: #34342f;
+    --rule-strong: #f1f1ec;
+    --edge: #6f6f68;
+    --done-fill: #2e2e2a;
+    --hatch: #4a4a44;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #121211;
+  --paper-2: #1b1b19;
+  --ink: #f1f1ec;
+  --ink-2: #c9c9c2;
+  --ink-3: #9a9a93;
+  --rule: #34342f;
+  --rule-strong: #f1f1ec;
+  --edge: #6f6f68;
+  --done-fill: #2e2e2a;
+  --hatch: #4a4a44;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --step: 0ms;
+  }
+}
