@@ -1,6 +1,7 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
 import { button, element, required } from './dom.ts';
 import { createGraph } from './graph.ts';
+import { createSpatialGraph } from './spatial.ts';
 import { renderState } from './state.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
@@ -35,6 +36,8 @@ let walkthrough: { id: string; index: number; run?: Run } | undefined;
 let rehearsal: { id: string; index: number; run?: PracticeResponse } | undefined;
 let selection: string | undefined;
 let canvas: { key: string; graph: ReturnType<typeof createGraph> } | undefined;
+let spatialCanvas: { key: string; graph: ReturnType<typeof createGraph> } | undefined;
+let spatialScene: { key: string; graph: ReturnType<typeof createSpatialGraph> } | undefined;
 let request: AbortController | undefined;
 let progressRequest = 0;
 let busy = false;
@@ -180,21 +183,41 @@ function renderFrame(announce: boolean) {
   const run = current?.run;
   const frame = run?.frames[current!.index];
   const area = ui.q('#graph-area');
+  const spatialArea = ui.q('#spatial-graph-area');
   if (!run || !frame) {
     area.replaceChildren();
+    spatialArea.replaceChildren();
     ui.q('#graph-meta').textContent = 'Interactive example';
     ui.q('#state-panel').replaceChildren();
     ui.q('#state-panel').hidden = true;
     ui.q('.step-detail').hidden = true;
     ui.highlight(null);
     canvas = undefined;
+    spatialCanvas = undefined;
+    spatialScene?.graph.dispose();
+    spatialScene = undefined;
   } else {
     const key = `${run.lessonId}:${run.exampleId}`;
     if (canvas?.key !== key) {
       canvas = { key, graph: createGraph(run.graph, run.positions) };
       area.replaceChildren(canvas.graph.picture);
     }
+    if (spatialCanvas?.key !== key) {
+      spatialCanvas = { key, graph: createGraph(run.graph, run.positions) };
+      spatialCanvas.graph.picture.classList.add('spatial-scene');
+      spatialArea.replaceChildren(spatialCanvas.graph.picture);
+      bindGraphWheel(spatialArea);
+    }
+    if (spatialScene?.key !== key) {
+      spatialScene?.graph.dispose();
+      spatialScene = { key, graph: createSpatialGraph(spatialArea, run.graph, run.positions) };
+    }
     canvas.graph.update(frame);
+    spatialCanvas.graph.update(frame);
+    spatialScene.graph.update(frame);
+    area.dataset.step = String(frame.index);
+    spatialArea.dataset.step = String(frame.index);
+    spatialArea.style.setProperty('--scene-depth', String(frame.index));
     ui.q('#graph-meta').textContent = `${run.graph.directed ? 'Directed' : 'Undirected'} · ${run.graph.vertices.length} vertices · ${run.graph.edges.length} edges`;
     const terminal = frame.lineId === 'finish';
     const success = terminal && run.result && !['unreachable', 'cycle', 'disconnected'].includes(run.result.kind);
@@ -213,6 +236,26 @@ function renderFrame(announce: boolean) {
   renderControls();
   renderPractice();
   renderNotice();
+}
+
+let graphWheelDelta = 0;
+let graphWheelFrame = 0;
+
+function bindGraphWheel(area: HTMLElement) {
+  if (area.dataset.wheelBound === 'true') return;
+  area.dataset.wheelBound = 'true';
+  area.addEventListener('wheel', event => {
+    if (!activeRun()?.run || busy || view === 'practice' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    event.preventDefault();
+    graphWheelDelta += event.deltaY;
+    if (Math.abs(graphWheelDelta) < 70 || graphWheelFrame) return;
+    const direction = graphWheelDelta > 0 ? 1 : -1;
+    graphWheelDelta = 0;
+    graphWheelFrame = window.requestAnimationFrame(() => {
+      graphWheelFrame = 0;
+      move(direction);
+    });
+  }, { passive: false });
 }
 
 function practiceButton(text: string, key: string, action: () => void, style = 'button') {
@@ -448,6 +491,9 @@ async function applyRoute(focus = false) {
   walkthrough = undefined;
   rehearsal = undefined;
   canvas = undefined;
+  spatialCanvas = undefined;
+  spatialScene?.graph.dispose();
+  spatialScene = undefined;
   selection = undefined;
   guideLink.hidden = true;
   renderProgress();

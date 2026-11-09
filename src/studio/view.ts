@@ -109,6 +109,14 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
           </section>
         </div>
       </div>
+      <section class="spatial-section" aria-labelledby="spatial-title">
+        <div class="spatial-heading">
+          <div><p class="eyebrow">EXPERIMENTAL VIEW</p><h2 id="spatial-title">Step into the graph</h2><p>Drag to orbit around the nodes. Scroll to move through the algorithm one frame at a time.</p></div>
+          <span class="spatial-badge">3D / SCROLL</span>
+        </div>
+        <div class="spatial-viewport" id="spatial-graph-area" tabindex="0" aria-describedby="spatial-scroll-hint"></div>
+        <p class="graph-scroll-hint" id="spatial-scroll-hint">Drag the scene to look around. Scroll up to go back or down to go forward. Labels stay attached to each vertex.</p>
+      </section>
       <details class="guide card" id="learning-guide">
         <summary>Learning guide &amp; graph concepts</summary>
         <div class="guide-content" id="guide-content"></div>

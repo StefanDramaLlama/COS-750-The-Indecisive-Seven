@@ -13,7 +13,7 @@ function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string,
 
 export function createGraph(graph: Graph, positions: Positions) {
   const uid = `graph-${++graphNumber}`;
-  const picture = svg('svg', { viewBox: '0 0 460 250', role: 'img', 'aria-labelledby': `${uid}-title ${uid}-desc` });
+  const picture = svg('svg', { viewBox: '0 0 460 250', role: 'img', class: 'graph-scene', 'aria-labelledby': `${uid}-title ${uid}-desc` });
   const title = svg('title', { id: `${uid}-title` }, graph.directed ? 'Directed graph' : 'Undirected graph');
   const edgeSummary = graph.edges.map(edge =>
     `${edge.from}${graph.directed ? ' to ' : ' joined to '}${edge.to}${edge.weight === undefined ? '' : `, weight ${edge.weight}`}`
