@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Learn six graph algorithms through visual walkthroughs and guided practice.">
+  <title>Graphwise · Algorithm Studio</title>
+  <link rel="icon" href="/assets/styles/graphwise.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/styles/studio.css">
+  <script type="module" src="/assets/studio/index.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to lesson</a>
+  <div class="layout">
+    <aside class="sidebar" id="course-nav">
+      <a class="brand" href="/algorithms" data-route>
+        <img src="/assets/styles/graphwise.svg" width="32" height="32" alt="">
+        <span>graphwise<span class="brand-tag">MAKE CONNECTIONS.</span></span>
+      </a>
+      <nav aria-label="Course navigation">
+        <p class="nav-label">YOUR LEARNING PATH</p>
+        <a href="/algorithms" data-route class="nav-link"><span class="nav-icon" aria-hidden="true">⌘</span> Course overview</a>
+        <a href="/algorithms/dijkstra" data-route class="nav-link studio-nav"><span class="nav-icon" aria-hidden="true">◎</span> Algorithm Studio</a>
+        <p class="nav-label lesson-label">IN THIS STUDIO</p>
+        <div id="lesson-links" class="lesson-links"></div>
+      </nav>
+      <section class="progress-card" aria-label="Course progress">
+        <p class="nav-label">YOUR PROGRESS</p>
+        <p id="progress-count">0 of 6 lessons complete</p>
+        <progress id="course-progress" max="6" value="0" aria-label="Lessons completed"></progress>
+        <p class="progress-foot">Self-paced. At your pace.</p>
+      </section>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="crumbs">
+          <button class="menu-toggle" type="button" aria-label="Show course navigation" aria-controls="course-nav" aria-expanded="false">☰</button>
+          <a class="mobile-brand" href="/algorithms" data-route><img src="/assets/styles/graphwise.svg" width="26" height="26" alt="">graphwise</a>
+          <span class="breadcrumb">Computer science <span>/</span> Graphs <span>/</span> <strong>Algorithm Studio</strong></span>
+        </div>
+        <div class="top-actions">
+          <a id="guide-link" href="#learning-guide">Learning guide</a>
+          <label class="theme-control"><span aria-hidden="true">◐</span><span class="sr-only">Color theme</span>
+            <select id="theme">
+              <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <main id="main" class="content" tabindex="-1">
+        <p class="eyebrow">GRAPHWISE / ALGORITHM STUDIO</p>
+        <h1>Loading the studio…</h1>
+      </main>
+    </div>
+  </div>
+  <div id="announcement" role="status" class="sr-only"></div>
+</body>
+</html>
