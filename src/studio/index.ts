@@ -1,5 +1,5 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
-import { button, element, required } from './dom.ts';
+import { button, element, enhanceSelect, required } from './dom.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
 import { renderState } from './state.ts';
@@ -26,6 +26,8 @@ const menu = required<HTMLButtonElement>(document, '.menu-toggle');
 const guideLink = required(document, '#guide-link');
 const announcement = required(document, '#announcement');
 const theme = required<HTMLSelectElement>(document, '#theme');
+const accent = required<HTMLSelectElement>(document, '#accent');
+const clock = required<HTMLTimeElement>(document, '#clock');
 
 let lessons: LessonSummary[] = [];
 let progress: ProgressItem[] = [];
@@ -57,6 +59,27 @@ theme.addEventListener('change', () => {
   setTheme(theme.value);
   try { localStorage.setItem('graphwise-theme', theme.value); } catch { /* The current theme still applies. */ }
 });
+
+function setAccent(value: string) {
+  document.documentElement.dataset.accent = ['violet', 'ocean', 'mint', 'sunset'].includes(value) ? value : 'violet';
+  accent.value = document.documentElement.dataset.accent;
+}
+try { setAccent(localStorage.getItem('graphwise-accent') ?? 'violet'); } catch { setAccent('violet'); }
+enhanceSelect(theme);
+enhanceSelect(accent);
+accent.addEventListener('change', () => {
+  setAccent(accent.value);
+  try { localStorage.setItem('graphwise-accent', accent.value); } catch { /* The selected accent still applies. */ }
+});
+
+const clockFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+function renderClock() {
+  const now = new Date();
+  clock.dateTime = now.toISOString();
+  clock.textContent = clockFormatter.format(now);
+}
+renderClock();
+window.setInterval(renderClock, 30_000);
 
 function showMenu(open: boolean) {
   courseNav.toggleAttribute('data-open', open);
@@ -164,6 +187,14 @@ function renderControls() {
   play.setAttribute('aria-pressed', String(playing));
   ui.q('#step-count').textContent = !total ? '' : view === 'practice' && rehearsal?.run?.prompt
     ? `Step ${index + 1} · ${total} revealed` : `Step ${index + 1} of ${total}`;
+  const spatialBack = ui.q<HTMLButtonElement>('#spatial-back');
+  const spatialNext = ui.q<HTMLButtonElement>('#spatial-next');
+  const spatialPlay = ui.q<HTMLButtonElement>('#spatial-play');
+  spatialBack.disabled = !total || index === 0 || busy;
+  spatialNext.disabled = !total || index >= total - 1 || busy;
+  spatialPlay.disabled = !total || index >= total - 1 || busy;
+  spatialPlay.setAttribute('aria-pressed', String(playing));
+  ui.q('#spatial-play-label').textContent = playing ? 'Pause' : 'Play';
 }
 
 function renderNotice() {
@@ -214,6 +245,8 @@ function renderFrame(announce: boolean) {
     }
     canvas.graph.update(frame);
     spatialCanvas.graph.update(frame);
+    spatialScene.graph.setTotal(run.frames.length);
+    spatialScene.graph.setFocusEnabled(ui.q<HTMLInputElement>('#spatial-focus').checked);
     spatialScene.graph.update(frame);
     area.dataset.step = String(frame.index);
     spatialArea.dataset.step = String(frame.index);
@@ -468,8 +501,22 @@ function bindLesson() {
     else { playing = true; schedule(); }
     renderControls();
   });
+  ui.q('#spatial-back').addEventListener('click', () => move(-1));
+  ui.q('#spatial-next').addEventListener('click', () => move(1));
+  ui.q('#spatial-play').addEventListener('click', () => {
+    if (playing) pause();
+    else { playing = true; schedule(); }
+    renderControls();
+  });
+  const spatialFocus = ui.q<HTMLInputElement>('#spatial-focus');
+  try { spatialFocus.checked = localStorage.getItem('graphwise-spatial-focus') !== 'false'; } catch { spatialFocus.checked = true; }
+  spatialFocus.addEventListener('change', () => {
+    spatialScene?.graph.setFocusEnabled(spatialFocus.checked);
+    try { localStorage.setItem('graphwise-spatial-focus', String(spatialFocus.checked)); } catch { /* The current setting still applies. */ }
+  });
   const select = ui.q<HTMLSelectElement>('#speed');
   select.value = String(speed);
+  enhanceSelect(select);
   select.addEventListener('change', () => { speed = Number(select.value); schedule(); });
 }
 

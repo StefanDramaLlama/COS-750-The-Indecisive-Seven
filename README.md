@@ -50,3 +50,11 @@ For the demo, open Dijkstra and advance to **Update D to 7**. Step back to see t
 4. Verify the Preview URL with direct lesson links, all four API routes, and a full practice run. Check that completion survives a redeploy at the same branch URL. Repeat on Production once the team approves release.
 
 See the [implementation plan](ALGORITHM_STUDIO_PLAN.md) for the full design and verification matrix.
+
+## Learning-focused UI design
+
+The interface is designed to reduce the visual distance between an algorithm rule and the learner's next decision. The lesson title and scenario sit at the top of the reading column, the graph and its legend occupy the primary study area, and the current step is placed beside the graph so learners can compare the visual change with its explanation without losing context. Playback controls remain directly below the graph, while pseudocode and practice prompts stay in the adjacent column. On small screens this becomes a deliberate reading sequence: graph, controls, explanation, working state, practice, then pseudocode and reference material.
+
+The visual language takes cues from iOS and the portfolio's floating glass navigation without copying a product interface. Navigation, selectors, and lightweight controls use translucent pill surfaces with blur and a bright inner edge, while the graph and code panels remain more solid so information stays legible. The header includes a local date and time to make the studio feel present during a study session. The default background uses a soft lavender-blue field to keep long study sessions comfortable. Learners can independently choose System, Light, or Dark appearance and select Violet, Ocean, Mint, or Sunset accents; each accent updates the semantic learning highlight, dropdowns, and 3D graph rather than recoloring text arbitrarily.
+
+Accessibility is treated as part of the layout. Text uses a dark blue ink color against pale surfaces, and the dark theme swaps to light text and deeper surfaces through the same semantic variables. Focus-visible outlines are retained for keyboard users, controls have stable touch-sized targets, graph state is also described in text and live announcements, and `prefers-reduced-motion` disables playback and decorative movement. Color is paired with labels, borders, and state text so a learner does not need to distinguish color alone.

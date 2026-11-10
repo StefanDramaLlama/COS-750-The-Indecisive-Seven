@@ -59,21 +59,27 @@ function perspective(fov: number, aspect: number, near: number, far: number) {
   const range = 1 / (near - far);
   return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (near + far) * range, -1, 0, 0, near * far * 2 * range, 0]);
 }
-function cameraView(angle: number, distance: number, lift: number) {
-  const eyeX = Math.sin(angle) * distance;
-  const eyeZ = Math.cos(angle) * distance;
-  const targetY = lift * 0.12;
-  const forward = normalize([-eyeX, targetY - 0.1, -eyeZ]);
+function cameraView(angle: number, distance: number, lift: number, focus: Point) {
+  const eyeX = focus.x + Math.sin(angle) * distance;
+  const eyeY = focus.y + lift;
+  const eyeZ = focus.z + Math.cos(angle) * distance;
+  const forward = normalize([focus.x - eyeX, focus.y - eyeY, focus.z - eyeZ]);
   const right = normalize([forward[2], 0, -forward[0]]);
   const up = [right[1] * forward[2] - right[2] * forward[1], right[2] * forward[0] - right[0] * forward[2], right[0] * forward[1] - right[1] * forward[0]];
   return new Float32Array([
     right[0], up[0], -forward[0], 0, right[1], up[1], -forward[1], 0, right[2], up[2], -forward[2], 0,
-    -dot(right, [eyeX, lift, eyeZ]), -dot(up, [eyeX, lift, eyeZ]), dot(forward, [eyeX, lift, eyeZ]), 1
+    -dot(right, [eyeX, eyeY, eyeZ]), -dot(up, [eyeX, eyeY, eyeZ]), dot(forward, [eyeX, eyeY, eyeZ]), 1
   ]);
 }
 function normalize(vector: number[]) { const length = Math.hypot(...vector) || 1; return vector.map(value => value / length); }
 function dot(a: number[], b: number[]) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
 function color(hex: [number, number, number]) { return hex; }
+function themeColor(name: string, fallback: [number, number, number]) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const match = value.match(/^#([0-9a-f]{6})$/i);
+  if (!match) return fallback;
+  return [0, 2, 4].map(index => Number.parseInt(match[1].slice(index, index + 2), 16) / 255) as [number, number, number];
+}
 
 export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: Positions) {
   const canvas = document.createElement('canvas');
@@ -95,7 +101,7 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
   const context = canvas.getContext('webgl', { antialias: true, alpha: false });
   if (!context) {
     host.replaceChildren(Object.assign(document.createElement('p'), { className: 'webgl-fallback', textContent: 'This browser does not support WebGL. Use the playback controls above to explore the graph.' }));
-    return { update: () => undefined, dispose: () => undefined };
+    return { update: () => undefined, setTotal: () => undefined, setFocusEnabled: () => undefined, dispose: () => undefined };
   }
   const gl = context;
 
@@ -136,6 +142,7 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
   const points = program(gl, vertexShader, fragmentShader);
   const lines = program(gl, lineVertexShader, lineFragmentShader);
   let frame: TraceFrame | undefined;
+  let totalSteps = 0;
   let animation = 0;
   let depth = 0;
   let targetDepth = 0;
@@ -143,6 +150,15 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
   let targetOrbit = -0.22;
   let lift = 0;
   let targetLift = 0;
+  let focusX = 0;
+  let focusY = 0;
+  let focusZ = 0;
+  let targetFocusX = 0;
+  let targetFocusY = 0;
+  let targetFocusZ = 0;
+  let cameraDistance = 6.2;
+  let targetCameraDistance = 6.2;
+  let focusEnabled = true;
   let dragging = false;
   let lastPointerX = 0;
   let lastPointerY = 0;
@@ -157,6 +173,10 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
     gl.viewport(0, 0, width, height);
   }
   function updateBuffers() {
+    const nodeColor = themeColor('--spatial-node', [0.82, 0.91, 0.84]);
+    const activeColor = themeColor('--cyan', [0.96, 0.49, 0.28]);
+    const readyColor = themeColor('--cyan', [0.38, 0.83, 0.84]);
+    const resultColor = themeColor('--spatial-result', [0.56, 0.87, 0.65]);
     graph.vertices.forEach(({ id }, index) => {
       const point = nodes.get(id)!;
       point.x += (point.tx - point.x) * 0.08;
@@ -166,7 +186,7 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
       const active = frame?.highlights.vertex === id;
       const result = frame?.highlights.resultVertices?.includes(id) ?? false;
       const ready = frame?.state.kind === 'topological-sort' && frame.state.ready.includes(id);
-      pointColors.set(result ? color([0.56, 0.87, 0.65]) : active ? color([0.96, 0.49, 0.28]) : ready ? color([0.38, 0.83, 0.84]) : color([0.82, 0.91, 0.84]), index * 3);
+      pointColors.set(result ? resultColor : active ? activeColor : ready ? readyColor : nodeColor, index * 3);
     });
     gl.bindBuffer(gl.ARRAY_BUFFER, pointBuffer); gl.bufferData(gl.ARRAY_BUFFER, pointVertices, gl.DYNAMIC_DRAW);
   }
@@ -211,12 +231,6 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
       const position = project(midpoint, projection, view);
       label.hidden = !position.visible;
       label.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`;
-      if (position.visible) {
-        overlayContext.fillStyle = '#102324e8';
-        overlayContext.fillRect(position.x - 14, position.y - 11, 28, 22);
-        overlayContext.strokeStyle = '#577b76'; overlayContext.strokeRect(position.x - 14, position.y - 11, 28, 22);
-        overlayContext.fillStyle = '#f09a6b'; overlayContext.fillText(String(edge.weight), position.x, position.y);
-      }
     });
   }
   function draw() {
@@ -224,10 +238,19 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
     depth += (targetDepth - depth) * 0.06;
     orbit += (targetOrbit - orbit) * 0.08;
     lift += (targetLift - lift) * 0.08;
+    focusX += (targetFocusX - focusX) * 0.07;
+    focusY += (targetFocusY - focusY) * 0.07;
+    focusZ += (targetFocusZ - focusZ) * 0.07;
+    cameraDistance += (targetCameraDistance - cameraDistance) * 0.06;
     updateBuffers();
-    gl.clearColor(0.035, 0.09, 0.095, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); gl.enable(gl.DEPTH_TEST);
+    const backgroundColor = themeColor('--spatial-bg', [0.035, 0.09, 0.095]);
+    const baseEdgeColor = themeColor('--spatial-line', [0.32, 0.57, 0.56]);
+    const activeEdgeColor = themeColor('--cyan', [0.96, 0.49, 0.28]);
+    const resultEdgeColor = themeColor('--green', [0.56, 0.87, 0.65]);
+    const mutedEdgeColor = themeColor('--muted', [0.38, 0.43, 0.43]);
+    gl.clearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); gl.enable(gl.DEPTH_TEST);
     const projection = perspective(Math.PI / 3, canvas.width / canvas.height, 0.1, 100);
-    const view = cameraView(orbit, 6.2 - Math.min(depth, 8) * 0.15, lift + Math.sin(depth * 0.15) * 0.5);
+    const view = cameraView(orbit, cameraDistance - Math.min(depth, 8) * 0.15, lift + Math.sin(depth * 0.15) * 0.5, { x: focusX, y: focusY, z: focusZ, tx: 0, ty: 0, tz: 0 });
     updateEdges(); updateLabels(projection, view);
     gl.useProgram(lines); gl.bindBuffer(gl.ARRAY_BUFFER, edgeBuffer);
     const linePosition = gl.getAttribLocation(lines, 'position'); gl.enableVertexAttribArray(linePosition); gl.vertexAttribPointer(linePosition, 3, gl.FLOAT, false, 0, 0);
@@ -237,7 +260,7 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
       const result = frame?.highlights.resultEdges?.includes(edge.id) || frame?.state.kind === 'kruskal' && frame.state.selected.includes(edge.id) || frame?.state.kind === 'prim' && frame.state.selected.includes(edge.id);
       const skipped = frame?.highlights.skipped === edge.id;
       const known = frame?.state.kind === 'prim' && frame.state.frontier.includes(edge.id);
-      const edgeColor = active ? [0.96, 0.49, 0.28] : result ? [0.56, 0.87, 0.65] : skipped ? [0.38, 0.43, 0.43] : known ? [0.38, 0.83, 0.84] : [0.32, 0.57, 0.56];
+      const edgeColor = active ? activeEdgeColor : result ? resultEdgeColor : skipped ? mutedEdgeColor : known ? activeEdgeColor : baseEdgeColor;
       gl.uniform3f(gl.getUniformLocation(lines, 'color'), edgeColor[0], edgeColor[1], edgeColor[2]);
       gl.lineWidth(active || result ? 3 : 1); gl.drawArrays(gl.LINES, index * 2, 2);
     });
@@ -259,9 +282,37 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
   return {
     update(next: TraceFrame) {
       frame = next; targetDepth = next.index;
-      hudStep.textContent = `STEP ${String(next.index + 1).padStart(2, '0')}`;
+      const activeId = next.highlights.vertex;
+      const activePoint = activeId ? nodes.get(activeId) : undefined;
+      if (focusEnabled && activePoint) {
+        targetFocusX = activePoint.tx;
+        targetFocusY = activePoint.ty;
+        targetFocusZ = activePoint.tz;
+        targetCameraDistance = 4.8;
+        targetOrbit = -0.22 + activePoint.tx * 0.08;
+      } else {
+        targetFocusX = 0;
+        targetFocusY = 0;
+        targetFocusZ = 0;
+        targetCameraDistance = 6.2;
+        targetOrbit = -0.22;
+      }
+      hudStep.textContent = `STEP ${String(next.index + 1).padStart(2, '0')}${totalSteps ? ` / ${totalSteps}` : ''}`;
       hudTitle.textContent = next.title;
       hudChange.textContent = next.change;
+    },
+    setTotal(total: number) { totalSteps = total; },
+    setFocusEnabled(enabled: boolean) {
+      focusEnabled = enabled;
+      if (!enabled) {
+        targetFocusX = 0;
+        targetFocusY = 0;
+        targetFocusZ = 0;
+        targetCameraDistance = 6.2;
+        targetOrbit = -0.22;
+      } else if (frame) {
+        this.update(frame);
+      }
     },
     dispose() { window.cancelAnimationFrame(animation); resizeObserver?.disconnect(); canvas.remove(); overlay.remove(); labels.remove(); hud.remove(); }
   };

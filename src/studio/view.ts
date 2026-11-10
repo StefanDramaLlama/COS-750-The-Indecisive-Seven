@@ -1,5 +1,5 @@
 import type { Lesson, LessonSummary, Primer } from '../shared/contracts.ts';
-import { button, element, required } from './dom.ts';
+import { button, element, enhanceSelect, required } from './dom.ts';
 import { createGraph } from './graph.ts';
 
 export type View = 'walkthrough' | 'pseudocode' | 'practice';
@@ -86,10 +86,10 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
             </ul>
           </section>
           <div class="controls card" role="group" aria-label="Playback controls">
-            <button id="restart" type="button">↶ Restart</button>
-            <button id="back" type="button">← Back</button>
+            <button id="restart" type="button"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10V4m0 0h6M4 4l4 4a8 8 0 1 1-1 10" /></svg>Restart</button>
+            <button id="back" type="button"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg>Back</button>
             <button id="play" type="button">▷ Play</button>
-            <button id="next" type="button" class="primary">Next step →</button>
+            <button id="next" type="button" class="primary">Next step<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" /></svg></button>
             <label class="select-box"><span class="sr-only">Playback speed</span>
               <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
             </label>
@@ -115,6 +115,12 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
           <span class="spatial-badge">3D / SCROLL</span>
         </div>
         <div class="spatial-viewport" id="spatial-graph-area" tabindex="0" aria-describedby="spatial-scroll-hint"></div>
+        <div class="spatial-controls" role="group" aria-label="3D playback controls">
+          <button id="spatial-back" type="button"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg>Back</button>
+          <button id="spatial-play" type="button"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z" /></svg><span id="spatial-play-label">Play</span></button>
+          <button id="spatial-next" type="button" class="primary">Next step<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" /></svg></button>
+          <label class="spatial-toggle"><input id="spatial-focus" type="checkbox" checked><span>Focus active node</span></label>
+        </div>
         <p class="graph-scroll-hint" id="spatial-scroll-hint">Drag the scene to look around. Scroll up to go back or down to go forward. Labels stay attached to each vertex.</p>
       </section>
       <details class="guide card" id="learning-guide">
@@ -132,6 +138,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
   const lessonSelect = q<HTMLSelectElement>('#lesson-select');
   options(lessonSelect, lessons);
   lessonSelect.value = lesson.id;
+  enhanceSelect(lessonSelect);
   const tabs = new Map<View, HTMLAnchorElement>();
   for (const [name, title] of [['walkthrough', 'Walkthrough'], ['pseudocode', 'Pseudocode'], ['practice', 'Practice']] as const) {
     const link = routeLink(title, lessonUrl(lesson.id, name));
@@ -175,6 +182,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
       const entries = lesson.examples.filter(example => example.kind === kind);
       options(exampleSelect, entries.map(example => ({ id: example.id, name: example.title })));
       exampleSelect.value = id;
+      enhanceSelect(exampleSelect).refresh();
       q('#example-picker').hidden = entries.length < 2;
       const selected = entries.find(example => example.id === id)!;
       q('#scenario-title').textContent = selected.title;
