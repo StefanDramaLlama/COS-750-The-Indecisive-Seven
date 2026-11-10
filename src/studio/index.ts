@@ -183,13 +183,19 @@ function renderControls() {
   ui.q<HTMLButtonElement>('#restart').disabled = busy || !total;
   const play = ui.q<HTMLButtonElement>('#play');
   play.disabled = !total || index >= total - 1 || busy;
-  play.textContent = playing ? 'Ⅱ Pause' : '▷ Play';
+  play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  const playLabel = play.querySelector('.button-label');
+  if (playLabel) playLabel.textContent = playing ? 'Pause' : 'Play';
+  const playIcon = play.querySelector('path');
+  if (playIcon) playIcon.setAttribute('d', playing ? 'M7 5v14m10-14v14' : 'm8 5 11 7-11 7z');
   play.setAttribute('aria-pressed', String(playing));
   ui.q('#step-count').textContent = !total ? '' : view === 'practice' && rehearsal?.run?.prompt
     ? `Step ${index + 1} · ${total} revealed` : `Step ${index + 1} of ${total}`;
   const spatialBack = ui.q<HTMLButtonElement>('#spatial-back');
   const spatialNext = ui.q<HTMLButtonElement>('#spatial-next');
   const spatialPlay = ui.q<HTMLButtonElement>('#spatial-play');
+  const spatialRestart = ui.q<HTMLButtonElement>('#spatial-restart');
+  spatialRestart.disabled = busy || !total;
   spatialBack.disabled = !total || index === 0 || busy;
   spatialNext.disabled = !total || index >= total - 1 || busy;
   spatialPlay.disabled = !total || index >= total - 1 || busy;
@@ -206,6 +212,36 @@ function renderNotice() {
   message.textContent = failed?.message ?? (busy ? 'Loading the next step…' : '');
   retry.hidden = !failed;
   retry.onclick = failed?.retry ?? null;
+}
+
+function addMobileCollapse(host: HTMLElement, label: string) {
+  if (host.querySelector(':scope > .mobile-collapse')) return;
+  host.classList.add('mobile-section');
+  const control = document.createElement('button');
+  control.type = 'button';
+  control.className = 'mobile-collapse';
+  control.setAttribute('aria-expanded', 'true');
+  const update = () => {
+    const collapsed = host.classList.contains('mobile-collapsed');
+    control.textContent = collapsed ? `Show ${label}` : `Hide ${label}`;
+    control.setAttribute('aria-expanded', String(!collapsed));
+  };
+  control.addEventListener('click', () => {
+    host.classList.toggle('mobile-collapsed');
+    update();
+  });
+  host.prepend(control);
+  update();
+}
+
+function setupMobileCollapsibles() {
+  if (!ui) return;
+  addMobileCollapse(ui.q('.graph-card'), 'graph');
+  addMobileCollapse(ui.q('#state-panel'), 'working state');
+  addMobileCollapse(ui.q('.step-detail'), 'step explanation');
+  addMobileCollapse(ui.q('.code-card'), 'pseudocode');
+  addMobileCollapse(ui.q('.practice'), 'practice');
+  addMobileCollapse(ui.q('.spatial-section'), '3D graph');
 }
 
 function renderFrame(announce: boolean) {
@@ -263,11 +299,13 @@ function renderFrame(announce: boolean) {
     const state = ui.q('#state-panel');
     state.hidden = false;
     renderState(state, run.graph, frame.state);
+    addMobileCollapse(state, 'working state');
     ui.highlight(frame.lineId);
     if (announce) announcement.textContent = `Step ${frame.index + 1}. ${frame.title}. ${frame.change}`;
   }
   renderControls();
   renderPractice();
+  setupMobileCollapsibles();
   renderNotice();
 }
 
@@ -502,6 +540,16 @@ function bindLesson() {
     renderControls();
   });
   ui.q('#spatial-back').addEventListener('click', () => move(-1));
+  ui.q('#spatial-restart').addEventListener('click', () => {
+    pause();
+    if (view === 'practice') {
+      selection = undefined;
+      void sendPractice({ type: 'start' });
+    } else if (walkthrough) {
+      walkthrough.index = 0;
+      renderFrame(true);
+    }
+  });
   ui.q('#spatial-next').addEventListener('click', () => move(1));
   ui.q('#spatial-play').addEventListener('click', () => {
     if (playing) pause();

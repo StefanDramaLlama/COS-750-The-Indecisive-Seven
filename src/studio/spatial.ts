@@ -162,6 +162,13 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
   let dragging = false;
   let lastPointerX = 0;
   let lastPointerY = 0;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let pointerMoved = false;
+  const activePointers = new Map<number, { x: number; y: number }>();
+  let pinchDistance = 0;
+  let lastProjection: Float32Array | undefined;
+  let lastView: Float32Array | undefined;
   let resizeObserver: ResizeObserver | undefined;
 
   function resize() {
@@ -251,6 +258,8 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
     gl.clearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); gl.enable(gl.DEPTH_TEST);
     const projection = perspective(Math.PI / 3, canvas.width / canvas.height, 0.1, 100);
     const view = cameraView(orbit, cameraDistance - Math.min(depth, 8) * 0.15, lift + Math.sin(depth * 0.15) * 0.5, { x: focusX, y: focusY, z: focusZ, tx: 0, ty: 0, tz: 0 });
+    lastProjection = projection;
+    lastView = view;
     updateEdges(); updateLabels(projection, view);
     gl.useProgram(lines); gl.bindBuffer(gl.ARRAY_BUFFER, edgeBuffer);
     const linePosition = gl.getAttribLocation(lines, 'position'); gl.enableVertexAttribArray(linePosition); gl.vertexAttribPointer(linePosition, 3, gl.FLOAT, false, 0, 0);
@@ -269,15 +278,64 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
     gl.uniformMatrix4fv(gl.getUniformLocation(points, 'projection'), false, projection); gl.uniformMatrix4fv(gl.getUniformLocation(points, 'view'), false, view); gl.uniform1f(gl.getUniformLocation(points, 'pointSize'), Math.min(canvas.width, canvas.height) * 0.055); gl.drawArrays(gl.POINTS, 0, graph.vertices.length);
     animation = window.requestAnimationFrame(draw);
   }
-  canvas.addEventListener('pointerdown', event => { dragging = true; lastPointerX = event.clientX; lastPointerY = event.clientY; canvas.setPointerCapture(event.pointerId); });
+  canvas.addEventListener('pointerdown', event => {
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (activePointers.size === 2) {
+      const [first, second] = Array.from(activePointers.values());
+      pinchDistance = Math.hypot(second.x - first.x, second.y - first.y);
+      pointerMoved = true;
+    }
+    dragging = true;
+    pointerMoved = false;
+    pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    canvas.setPointerCapture(event.pointerId);
+  });
   canvas.addEventListener('pointermove', event => {
     if (!dragging) return;
+    if (activePointers.has(event.pointerId)) activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (activePointers.size === 2) {
+      const [first, second] = Array.from(activePointers.values());
+      const nextDistance = Math.hypot(second.x - first.x, second.y - first.y);
+      if (pinchDistance) targetCameraDistance = Math.max(2.8, Math.min(8.5, targetCameraDistance - (nextDistance - pinchDistance) * 0.012));
+      pinchDistance = nextDistance;
+      return;
+    }
+    if (Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) > 6) pointerMoved = true;
     targetOrbit += (event.clientX - lastPointerX) * 0.008;
     targetLift = Math.max(-2, Math.min(2, targetLift + (event.clientY - lastPointerY) * 0.008));
     lastPointerX = event.clientX; lastPointerY = event.clientY;
   });
   const stopDragging = () => { dragging = false; };
-  canvas.addEventListener('pointerup', stopDragging); canvas.addEventListener('pointercancel', stopDragging); canvas.addEventListener('pointerleave', stopDragging);
+  canvas.addEventListener('pointerup', event => {
+    if (focusEnabled && !pointerMoved && lastProjection && lastView) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const hitRadius = Math.max(22, Math.min(rect.width, rect.height) * 0.08);
+      let nearest: { id: VertexId; distance: number } | undefined;
+      graph.vertices.forEach(({ id }) => {
+        const position = project(nodes.get(id)!, lastProjection!, lastView!);
+        const distance = Math.hypot(position.x - x, position.y - y);
+        if (position.visible && distance <= hitRadius && (!nearest || distance < nearest.distance)) nearest = { id, distance };
+      });
+      const point = nearest ? nodes.get(nearest.id) : undefined;
+      if (point) {
+        targetFocusX = point.tx;
+        targetFocusY = point.ty;
+        targetFocusZ = point.tz;
+        targetCameraDistance = 4.8;
+        targetOrbit = -0.22 + point.tx * 0.08;
+      }
+    }
+    activePointers.delete(event.pointerId);
+    pinchDistance = 0;
+    stopDragging();
+  });
+  canvas.addEventListener('pointercancel', event => { activePointers.delete(event.pointerId); pinchDistance = 0; stopDragging(); });
+  canvas.addEventListener('pointerleave', stopDragging);
   resizeObserver = new ResizeObserver(resize); resizeObserver.observe(host); draw();
   return {
     update(next: TraceFrame) {
@@ -304,6 +362,7 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
     setTotal(total: number) { totalSteps = total; },
     setFocusEnabled(enabled: boolean) {
       focusEnabled = enabled;
+      canvas.classList.toggle('spatial-focus-enabled', enabled);
       if (!enabled) {
         targetFocusX = 0;
         targetFocusY = 0;
