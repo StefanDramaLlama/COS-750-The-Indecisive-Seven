@@ -50,6 +50,7 @@
     --raised: #2b2e4d; --text: #f6f5ff; --muted: #c0c2d7; --line: #424665; --strong-line: #9296b3;
     --cyan: #aaa5ff; --cyan-soft: #34365e; --cyan-border: #6666a3;
     --green: #8bdcaf; --green-soft: #1e4939; --button: #8e87f5; --button-text: #17172a;
+    --code: #20233e; --code-raised: #2b2e4d; --code-text: #f6f5ff; --code-muted: #c5c6e2; --code-line: #4a4e74; --code-active: #3b3e68; --code-cyan: #b5b1ff;
     --shadow: 0 12px 28px #07081466;
     --glass: #252946e6; --glass-soft: #343858cc; --glass-highlight: #424665; --scenario: #34365ed9; --background-accent: #625bd94d;
     --spatial-bg: #20233e; --spatial-grid: #8e87f533; --spatial-line: #aaa5ff; --spatial-node: #f6f5ff;
@@ -65,6 +66,7 @@
   --raised: #2b2e4d; --text: #f6f5ff; --muted: #c0c2d7; --line: #424665; --strong-line: #9296b3;
   --cyan: #aaa5ff; --cyan-soft: #34365e; --cyan-border: #6666a3;
   --green: #8bdcaf; --green-soft: #1e4939; --button: #8e87f5; --button-text: #17172a;
+  --code: #20233e; --code-raised: #2b2e4d; --code-text: #f6f5ff; --code-muted: #c5c6e2; --code-line: #4a4e74; --code-active: #3b3e68; --code-cyan: #b5b1ff;
   --shadow: 0 12px 28px #07081466;
   --glass: #252946e6; --glass-soft: #343858cc; --glass-highlight: #424665; --scenario: #34365ed9; --background-accent: #625bd94d;
   --spatial-bg: #20233e; --spatial-grid: #8e87f533; --spatial-line: #aaa5ff; --spatial-node: #f6f5ff;
@@ -109,7 +111,9 @@ h1, h2, h3, p { margin: 0; }
 .progress-card progress { width: 100%; height: 7px; accent-color: var(--cyan); margin-block: 7px 5px; }
 .progress-foot { color: var(--muted); font-size: 11px; }
 .workspace { min-width: 0; }
-.topbar { position: sticky; top: 0; z-index: 4; min-height: 70px; padding: 8px clamp(16px, 4vw, 58px); background: var(--glass); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; box-shadow: 0 8px 26px #24404b0d; backdrop-filter: blur(22px) saturate(125%); }
+.topbar { position: sticky; top: 0; z-index: 1000; min-height: 70px; padding: 8px clamp(16px, 4vw, 58px); background: var(--glass); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; box-shadow: 0 8px 26px #24404b0d; backdrop-filter: blur(22px) saturate(125%); }
+.topbar .top-actions, .topbar .theme-control, .topbar .dropdown { position: relative; z-index: 1001; }
+.topbar .dropdown-menu { z-index: 1100; }
 .crumbs, .top-actions { display: flex; gap: 14px; align-items: center; }
 .breadcrumb { color: var(--muted); font-size: 12px; }
 .breadcrumb span { margin-inline: 5px; opacity: .75; }
@@ -126,7 +130,9 @@ select option { background: var(--surface-solid); color: var(--text); }
 .native-select-source { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .dropdown-trigger { display: block; width: 100%; min-height: 37px; border: 0; border-radius: var(--radius); background: transparent; color: inherit; padding: 0 24px 0 2px; font: inherit; font-weight: inherit; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dropdown-trigger:focus-visible { outline: none; }
-.dropdown-menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; min-width: 100%; max-height: 248px; display: grid; gap: 4px; overflow-y: auto; padding: 5px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-solid); color: var(--text); box-shadow: 0 16px 34px #15162a38; }
+.topbar .dropdown { z-index: 60; }
+.lesson-head .dropdown { z-index: 10; }
+.dropdown-menu { position: absolute; z-index: 100; top: calc(100% + 6px); left: 0; min-width: 100%; max-height: 248px; display: grid; gap: 4px; overflow-y: auto; padding: 5px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-solid); color: var(--text); box-shadow: 0 16px 34px #15162a38; }
 .dropdown-option { min-height: 36px; display: flex; align-items: center; border-radius: var(--radius); padding: 6px 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 650; white-space: nowrap; }
 .dropdown-option:hover, .dropdown-option.is-active { background: var(--cyan-soft); color: var(--cyan); }
 .dropdown-option[aria-selected="true"] { background: var(--button); color: var(--button-text); }
