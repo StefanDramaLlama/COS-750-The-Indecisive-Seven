@@ -1,0 +1,23 @@
+{
+  "name": "graphwise",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && npm start",
+    "start": "node --env-file-if-exists=.env.local .build/scripts/serve.js",
+    "check": "npm run build && node --test .build/tests/*.test.js",
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~5.9.3"
+  }
+}
