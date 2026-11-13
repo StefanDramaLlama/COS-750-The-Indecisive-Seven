@@ -51,11 +51,11 @@ let reviewLine: string | undefined;
 let failed: { message: string; retry: () => void } | undefined;
 
 function setTheme(value: string) {
-  if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
-  else delete document.documentElement.dataset.theme;
-  theme.value = value === 'light' || value === 'dark' ? value : 'system';
+  const next = value === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  theme.value = next;
 }
-try { setTheme(localStorage.getItem('graphwise-theme') ?? 'system'); } catch { setTheme('system'); }
+try { setTheme(localStorage.getItem('graphwise-theme') ?? 'light'); } catch { setTheme('light'); }
 theme.addEventListener('change', () => {
   setTheme(theme.value);
   try { localStorage.setItem('graphwise-theme', theme.value); } catch { /* The current theme still applies. */ }
