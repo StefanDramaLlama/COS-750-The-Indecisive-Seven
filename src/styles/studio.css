@@ -441,8 +441,10 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
   .builder-canvas > .mobile-collapse, .builder-panel > .mobile-collapse, .builder-state-wrap > .mobile-collapse { width: calc(100% - 24px); margin: 0 12px 10px; box-sizing: border-box; }
   .builder-canvas header { display: grid; gap: 12px; padding: 12px; box-sizing: border-box; }
   .builder-actions { width: 100%; flex-wrap: wrap; }
-  .builder-actions button { flex: 1 1 100px; min-width: 0; }
-  .builder-zoom { flex: 1 1 100%; justify-content: space-between; }
+  .builder-actions > button { flex: 1 1 100px; min-width: 0; }
+  .builder-zoom { flex: 0 0 auto; width: auto; justify-content: center; gap: 4px; padding: 2px 4px; }
+  .builder-zoom button { flex: 0 0 32px; width: 32px; min-width: 32px; min-height: 32px; height: 32px; padding: 0; line-height: 1; }
+  .builder-zoom output { min-width: 40px; font-size: 11px; }
   .builder-grid { min-height: 220px; width: calc(100% - 16px); margin: 0 8px 12px; }
   .builder-state-wrap, .builder-spatial-section, .builder-test { width: 100%; min-width: 0; box-sizing: border-box; overflow: hidden; }
   .builder-result > .mobile-collapse, .builder-spatial-section > .mobile-collapse, .builder-test > .mobile-collapse { width: 100%; margin: 0 0 10px; box-sizing: border-box; }
