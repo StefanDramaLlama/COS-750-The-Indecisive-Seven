@@ -2,6 +2,7 @@ import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressI
 import { button, element, enhanceSelect, required } from './dom.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
+import { mountBuilder } from './builder.ts';
 import { renderState } from './state.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
@@ -569,6 +570,11 @@ function bindLesson() {
 }
 
 async function applyRoute(focus = false) {
+  if (location.pathname === '/builder') {
+    lesson = undefined; ui = undefined; guideLink.hidden = true; renderProgress();
+    mountBuilder(main, async payload => json<Run>('/api/runs', undefined, payload));
+    return;
+  }
   const match = /^\/algorithms\/([^/]+)\/?$/.exec(location.pathname);
   const id = match?.[1];
   const mode = new URLSearchParams(location.search).get('view');

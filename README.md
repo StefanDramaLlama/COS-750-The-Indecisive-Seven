@@ -35,6 +35,8 @@ npm start        # Serve the existing local build without rebuilding
 
 For the demo, open Dijkstra and advance to **Update D to 7**. Step back to see the estimate of 12 and its prior predecessor. In Practice, make one incorrect prediction, use the hint, and complete the exercise. Use the lesson selector to show the distinguishing operation in the remaining lessons. The Learning Guide contains before-and-after graph examples and each lesson’s objectives.
 
+Open `/builder` for the Graph Builder. Add vertices to the grid, drag them into place, select two vertices to create an edge, and choose directed or weighted edges before running Dijkstra, BFS, DFS, topological sort, Kruskal, or Prim. The builder sends the graph through the same server-side validation and algorithm runners as the lessons. Invalid combinations return useful feedback, such as requiring weights for Dijkstra, Kruskal, and Prim, rejecting weights for BFS, requiring directed edges for topological sort, and requiring undirected edges for spanning-tree algorithms.
+
 ## How the app fits together
 
 - `src/server/algorithms` runs the algorithms and emits frame snapshots. `src/server/lessons` owns the lesson copy, graph fixtures, and pseudocode.

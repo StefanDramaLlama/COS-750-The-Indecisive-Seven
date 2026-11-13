@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Choice, Example, LessonId, PracticeAction } from '../shared/contracts.ts';
+import type { Choice, Example, Graph, LessonId, Positions, PracticeAction } from '../shared/contracts.ts';
 import { GraphInputError } from './algorithms/graph.ts';
 import { runExample } from './algorithms/index.ts';
 import { getLesson, getLessons, isLessonId } from './lessons/catalog.ts';
@@ -74,7 +74,10 @@ export const lessonsEndpoint = endpoint('GET', request => {
 export const runsEndpoint = endpoint('POST', async request => {
   const data = await body(request);
   const id = lessonId(data.lessonId);
-  const example = exampleFor(id, data.exampleId, 'walkthrough');
+  const example = record(data.graph) && record(data.positions)
+    ? { id: 'builder', kind: 'walkthrough' as const, title: 'Graph builder', scenario: 'A learner-built graph.', graph: data.graph as unknown as Graph, positions: data.positions as unknown as Positions,
+      startId: typeof data.startId === 'string' ? data.startId : undefined, goalId: typeof data.goalId === 'string' ? data.goalId : undefined }
+    : exampleFor(id, data.exampleId, 'walkthrough');
   return Response.json(runExample(id, getLesson(id).version, example));
 });
 

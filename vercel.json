@@ -6,6 +6,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/algorithms", "destination": "/index.html" },
-    { "source": "/algorithms/:lessonId", "destination": "/index.html" }
+    { "source": "/algorithms/:lessonId", "destination": "/index.html" },
+    { "source": "/builder", "destination": "/index.html" }
   ]
 }
