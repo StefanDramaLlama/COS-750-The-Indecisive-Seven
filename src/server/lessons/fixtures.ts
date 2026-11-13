@@ -33,6 +33,15 @@ const links = (ac: number, cd: number) => makeGraph(abcd, [['A', 'B', 1], ['B', 
 const brokenLinks = makeGraph(abcd, [['A', 'B', 1], ['A', 'C', 3], ['B', 'C', 2]]);
 
 export const examples = {
+
+  basics: [
+    example('labelled-graph', 'walkthrough', 'A small labelled graph',
+      'Look at the nodes, edges, arrowheads, and weights before you continue.',
+      makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['C', 'D', 3]]), diamond),
+    example('labelled-graph-practice', 'practice', 'Name the parts',
+      'Answer three quick questions about nodes and edges before you start the algorithms.',
+      makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['C', 'D', 3]]), diamond)
+  ],
   dijkstra: [
     example('weighted-diamond', 'walkthrough', 'The weighted diamond', 'Find the lowest-cost delivery route from A to D. Each edge label is its delivery cost.', routes(10), diamond, 'A', 'D'),
     example('unreachable', 'walkthrough', 'An unreachable destination', 'Roads reach B and C from A. D is isolated. Follow the estimates until the search runs out of reachable vertices.', makeGraph(abcd, [['A', 'B', 5], ['A', 'C', 2]]), diamond, 'A', 'D'),

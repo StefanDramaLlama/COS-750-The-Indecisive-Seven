@@ -15,7 +15,45 @@ const at = (event: string, vertex?: string, edge?: string) => (run: Run) => run.
 const beforeFinish = (run: Run) => run.frames.length - 2;
 const oneAnswer = (correct: string) => (_frame: TraceFrame, optionId: string) => optionId === correct;
 
-const checkpoints: Record<LessonId, Checkpoint[]> = {
+export const checkpoints: Record<LessonId, Checkpoint[]> = {
+  basics: [
+    {
+      prompt: {
+        id: 'graph',
+        question: 'What two kinds of thing make up a graph?',
+        options: options(['nodes-edges', 'Nodes and edges'], ['nodes-only', 'Only nodes'], ['edges-only', 'Only edges']),
+        reviewLineId: 'graph'
+      },
+      at: at('graph'),
+      accepts: oneAnswer('nodes-edges'),
+      hint: 'Look at the picture: dots and the lines between them.',
+      correct: 'A graph is nodes joined by edges. Both are part of the definition.'
+    },
+    {
+      prompt: {
+        id: 'node',
+        question: 'Which part of the picture is a node?',
+        options: options(['dot', 'One of the dots'], ['line', 'One of the lines'], ['label', 'A number on a line']),
+        reviewLineId: 'node'
+      },
+      at: at('node'),
+      accepts: oneAnswer('dot'),
+      hint: 'A node is a single point — the dots in the graph.',
+      correct: 'The dots are nodes (vertices). Each node is one item in the graph.'
+    },
+    {
+      prompt: {
+        id: 'edge',
+        question: 'What does an edge connect?',
+        options: options(['two-nodes', 'Two nodes'], ['node-graph', 'A node to the whole graph'], ['weights', 'Two edge weights']),
+        reviewLineId: 'edge'
+      },
+      at: at('edge'),
+      accepts: oneAnswer('two-nodes'),
+      hint: 'An edge is a line. What is on each end of the line?',
+      correct: 'An edge joins two nodes. Direction and weight describe *how* the connection works.'
+    }
+  ],
   dijkstra: [
     {
       prompt: { id: 'estimate', question: 'What estimate should replace D’s current distance?', options: options(['3', '3'], ['5', '5'], ['7', '7']), reviewLineId: 'relax' },

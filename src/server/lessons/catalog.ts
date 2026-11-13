@@ -5,6 +5,30 @@ const line = (id: string, text: string, explanation: string): CodeLine => ({ id,
 type LessonContent = Omit<Lesson, 'id' | 'examples'>;
 
 const content: Record<LessonId, LessonContent> = {
+  basics: {
+    version: 1,
+    name: 'Graph basics',
+    category: 'Foundations · nodes, edges, direction',
+    title: 'Start here: nodes and edges.',
+    summary: 'Learn the vocabulary every other lesson assumes.',
+    prerequisites: 'No prior graph knowledge',
+    complexity: 'Concepts only — not an algorithm',
+    objectives: [
+      'Read a graph as nodes connected by edges — and identify each part.',
+      'Recognise directed, weighted, connected, and cyclic graphs from small examples.'
+    ],
+    primers: [primers.direction, primers.cycles, primers.connectivity, primers.weights],
+    code: [
+      line('graph', 'A graph is a set of nodes joined by edges.',
+        'Graphs model anything made of items and connections: roads, friendships, dependencies, networks.'),
+      line('node', 'A node (vertex) is one item in the graph.',
+        'A node has a label. When drawn, it also has a position. A graph with 4 nodes has 4 vertices.'),
+      line('edge', 'An edge (link) joins two nodes.',
+        'An edge connects a pair of nodes. If it has an arrowhead it is directed; if it carries a number it is weighted.'),
+      line('finish', 'Every algorithm in this studio works on a graph like this one.',
+        'The rest of the lessons turn these ideas into procedures.')
+    ]
+  },
   dijkstra: {
     version: 1,
     name: 'Dijkstra', category: 'Weighted shortest path',
