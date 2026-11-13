@@ -20,11 +20,11 @@ const content: Record<LessonId, LessonContent> = {
     primers: [primers.direction, primers.cycles, primers.connectivity, primers.weights],
     code: [
       line('graph', 'A graph is a set of nodes joined by edges.',
-        'Graphs model anything made of items and connections: roads, friendships, dependencies, networks.'),
+        'A graph is exactly that: nodes, and edges joining them. Everything else builds on those two sets.'),
       line('node', 'A node (vertex) is one item in the graph.',
-        'A node has a label. When drawn, it also has a position. A graph with 4 nodes has 4 vertices.'),
+        'A node has a label. When drawn, it also has a position. A graph with three nodes has three vertices.'),
       line('edge', 'An edge (link) joins two nodes.',
-        'An edge connects a pair of nodes. If it has an arrowhead it is directed; if it carries a number it is weighted.'),
+        'An edge connects a pair of nodes. An arrowhead makes it directed; a number makes it weighted.'),
       line('finish', 'Every algorithm in this studio works on a graph like this one.',
         'The rest of the lessons turn these ideas into procedures.')
     ]

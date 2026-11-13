@@ -244,6 +244,18 @@ function setupMobileCollapsibles() {
   addMobileCollapse(ui.q('.spatial-section'), '3D graph');
 }
 
+function renderBullets(host: HTMLElement, text: string, className?: string) {
+  if (className) host.className = className;
+  const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    host.textContent = text;
+    return;
+  }
+  const list = element('ul');
+  for (const line of lines) list.append(element('li', line));
+  host.replaceChildren(list);
+}
+
 function renderFrame(announce: boolean) {
   if (!ui) return;
   const current = activeRun();
@@ -294,11 +306,11 @@ function renderFrame(announce: boolean) {
     ui.q('.step-detail').classList.toggle('terminal', Boolean(success));
     ui.q('#step-label').textContent = terminal ? 'RESULT' : frame.index === 0 ? 'BEFORE WE BEGIN' : `CURRENT STEP / ${String(frame.index + 1).padStart(2, '0')}`;
     ui.q('#step-title').textContent = frame.title;
-    ui.q('#step-change').textContent = frame.change;
-    ui.q('#step-reason').textContent = frame.reason;
+    renderBullets(ui.q('#step-change'), frame.change);
+    renderBullets(ui.q('#step-reason'), frame.reason, 'step-reason');
     const state = ui.q('#state-panel');
-    state.hidden = false;
-    renderState(state, run.graph, frame.state);
+    state.hidden = lesson?.id === 'basics';
+    if (!state.hidden) renderState(state, run.graph, frame.state);
     addMobileCollapse(state, 'working state');
     ui.highlight(frame.lineId);
     if (announce) announcement.textContent = `Step ${frame.index + 1}. ${frame.title}. ${frame.change}`;
