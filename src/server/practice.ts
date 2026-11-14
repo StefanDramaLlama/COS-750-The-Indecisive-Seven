@@ -140,6 +140,26 @@ export const checkpoints: Record<LessonId, Checkpoint[]> = {
       hint: 'Read the running cost and add the remaining frontier edge C–D, whose weight is zero.',
       correct: 'The total is 1 + 2 + 0 = 3. The free link becomes eligible once C is in the tree.'
     }
+  ],
+  compare: [
+    {
+      prompt: { id: 'bfs-route', question: 'Which route does BFS return from A to D?', options: options(['AD', 'A → D'], ['ACD', 'A → C → D'], ['ABD', 'A → B → D']), reviewLineId: 'bfs' },
+      at: at('open'), accepts: oneAnswer('AD'),
+      hint: 'BFS counts hops and ignores the minutes on each path. Which route uses the fewest paths?',
+      correct: 'A → D is a single hop, so BFS returns it, even though it takes 9 minutes.'
+    },
+    {
+      prompt: { id: 'dijkstra-route', question: 'Which route does Dijkstra return?', options: options(['AD', 'A → D'], ['ACD', 'A → C → D'], ['ABD', 'A → B → D']), reviewLineId: 'dijkstra' },
+      at: at('bfs'), accepts: oneAnswer('ACD'),
+      hint: 'Add up the minutes along each route and pick the smallest total.',
+      correct: 'A → C → D takes 1 + 1 = 2 minutes, the lowest total.'
+    },
+    {
+      prompt: { id: 'choose', question: 'A friendship network has no weights. Which algorithm should an app use to count degrees of separation?', options: options(['bfs', 'BFS: same route, simpler code'], ['dijkstra', 'Dijkstra: it works on more graphs'], ['big-o', 'Either: only Big-O matters']), reviewLineId: 'equal' },
+      at: beforeFinish, accepts: oneAnswer('bfs'),
+      hint: 'Without weights, the cheapest route is the one with the fewest hops. Which algorithm finds that with less code?',
+      correct: 'BFS. Without weights both return the same route, and BFS needs only a queue, so it is quicker to write and easier to maintain.'
+    }
   ]
 };
 

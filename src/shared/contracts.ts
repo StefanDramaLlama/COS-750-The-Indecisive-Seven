@@ -1,4 +1,4 @@
-export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim';
+export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'compare';
 export type VertexId = string;
 export type EdgeId = string;
 

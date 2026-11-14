@@ -122,6 +122,22 @@ const content: Record<LessonId, LessonContent> = {
       line('add', '  if a crossing edge exists: add the cheapest edge and its outside vertex', 'The cheapest crossing edge grows the tree by one vertex and cannot form a cycle. Equal costs use edge ID.'),
       line('finish', 'return the tree, or the partial tree when no crossing edge exists', 'A partial tree covers only the component of the selected start.')
     ]
+  },
+  compare: {
+    version: 1,
+    name: 'Choose an algorithm', category: 'Beyond efficiency · BFS or Dijkstra',
+    title: 'Pick the algorithm that fits the data.',
+    summary: 'Run BFS and Dijkstra on the same graph and see what, besides speed, decides between them.',
+    prerequisites: 'The BFS and Dijkstra lessons', complexity: 'BFS O(V + E) with a queue · Dijkstra O(V² + E) with a distance table',
+    objectives: ['Explain why edge weights decide whether BFS or Dijkstra finds the right route.', 'Justify choosing the simpler algorithm when both give the same answer.'],
+    primers: [primers.weights],
+    code: [
+      line('bfs', 'bfs(graph, start): count hops with a plain queue', 'BFS ignores the weights: every edge counts as one hop.'),
+      line('dijkstra', 'dijkstra(graph, start): add up weights with a priority queue', 'Dijkstra needs a priority queue and distance updates, so it is more code to write and test.'),
+      line('weights', 'if the edges have different weights: use dijkstra', 'The route with the fewest hops is not always the cheapest, so BFS can return the wrong route.'),
+      line('equal', 'else: bfs and dijkstra return the same route', 'With no weights, or equal weights, the cheapest route is the one with the fewest hops.'),
+      line('finish', '  same route: choose the code that is simpler to write and maintain', 'When both are correct, programming time and maintainability decide.')
+    ]
   }
 };
 

@@ -23,7 +23,7 @@ export function validateGraph(graph: Graph, lesson: LessonId, start?: VertexId, 
   }
   const edgeIds = new Set<EdgeId>();
   const pairs = new Set<string>();
-  const weighted = ['dijkstra', 'prim', 'kruskal'].includes(lesson);
+  const weighted = ['dijkstra', 'prim', 'kruskal', 'compare'].includes(lesson);
   for (const edge of graph.edges) {
     if (!edge || !validId(edge.id) || edgeIds.has(edge.id) || !ids.has(edge.from) || !ids.has(edge.to) || edge.from === edge.to) {
       throw new GraphInputError('Each edge needs a unique ID and two distinct existing endpoints.');
@@ -36,15 +36,15 @@ export function validateGraph(graph: Graph, lesson: LessonId, start?: VertexId, 
       throw new GraphInputError('Use integer edge weights between −1,000,000 and 1,000,000.');
     }
     if (weighted && edge.weight === undefined) throw new GraphInputError('This lesson requires a weight on every edge.');
-    if (lesson === 'dijkstra' && edge.weight! < 0) throw new GraphInputError('Dijkstra requires nonnegative edge weights.');
+    if ((lesson === 'dijkstra' || lesson === 'compare') && edge.weight! < 0) throw new GraphInputError('Dijkstra requires nonnegative edge weights.');
     if (lesson === 'bfs' && edge.weight !== undefined) throw new GraphInputError('Use an unweighted graph to find the fewest hops with BFS.');
   }
   if (lesson === 'topological-sort' && !graph.directed) throw new GraphInputError('Topological sorting requires directed edges.');
   if ((lesson === 'prim' || lesson === 'kruskal') && graph.directed) throw new GraphInputError('Use an undirected graph for the spanning tree lesson.');
-  if (['dijkstra', 'bfs', 'dfs', 'prim'].includes(lesson) && (start === undefined || !ids.has(start))) {
+  if (['dijkstra', 'bfs', 'dfs', 'prim', 'compare'].includes(lesson) && (start === undefined || !ids.has(start))) {
     throw new GraphInputError('Select an existing start vertex.');
   }
-  if ((goal !== undefined && !ids.has(goal)) || (lesson === 'dijkstra' && goal === undefined)) {
+  if ((goal !== undefined && !ids.has(goal)) || ((lesson === 'dijkstra' || lesson === 'compare') && goal === undefined)) {
     throw new GraphInputError('Select an existing goal vertex.');
   }
 }
