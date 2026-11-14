@@ -75,7 +75,8 @@ export const runsEndpoint = endpoint('POST', async request => {
   const data = await body(request);
   const id = lessonId(data.lessonId);
   const example = exampleFor(id, data.exampleId, 'walkthrough');
-  return Response.json(runExample(id, getLesson(id).version, example));
+  const variant = typeof data.variant === 'string' ? data.variant : undefined;
+  return Response.json(runExample(id, getLesson(id).version, example, undefined, variant));
 });
 
 function choice(value: unknown): Choice {
@@ -100,6 +101,9 @@ export const practiceEndpoint = endpoint('POST', async request => {
     throw invalid('Provide a lesson version and the accepted choices.');
   }
   if (data.version !== version) throw new RequestError(409, 'LESSON_UPDATED', 'The lesson has changed. Reload the page to start again.');
+  if (data.lessonId === 'topological-sort' && data.variant === 'dfs') {
+    throw new RequestError(422, 'PRACTICE_UNAVAILABLE', 'Practice is available for Kahn’s algorithm only.');
+  }
   const action = practiceAction(data.action);
   const result = practice({ lessonId: id, exampleId: example.id, version, action, acceptedChoices: data.acceptedChoices.map(choice) }, example);
   const existing = learnerId(request);

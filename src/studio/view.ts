@@ -135,7 +135,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
   q('#lesson-title').textContent = lesson.title;
   q('#lesson-summary').textContent = lesson.summary;
   q('#assumption').textContent = lesson.prerequisites;
-  q('#code-title').textContent = lesson.id === 'topological-sort' ? 'Kahn’s algorithm' : lesson.name;
+  q('#code-title').textContent = lesson.name;
   const lessonSelect = q<HTMLSelectElement>('#lesson-select');
   options(lessonSelect, lessons);
   lessonSelect.value = lesson.id;
@@ -145,6 +145,15 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
     const link = routeLink(title, lessonUrl(lesson.id, name));
     q('.views').append(link);
     tabs.set(name, link);
+  }
+
+  if (lesson.variants) {
+    const picker = element('select', undefined, 'variant-select') as HTMLSelectElement;
+    picker.id = 'variant-select';
+    picker.setAttribute('aria-label', 'Algorithm variant');
+    for (const v of lesson.variants) picker.append(new Option(v.label, v.id));
+    picker.value = lesson.variants[0].id;
+    q('#code-title').after(picker);
   }
 
   const code = q('#code-lines');
@@ -179,6 +188,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
   const exampleSelect = q<HTMLSelectElement>('#example-select');
   return {
     q, tabs, codeButtons, lessonSelect, exampleSelect,
+    variantSelect: lesson.variants ? q<HTMLSelectElement>('#variant-select') : undefined,
     setExamples(kind: 'walkthrough' | 'practice', id: string) {
       const entries = lesson.examples.filter(example => example.kind === kind);
       options(exampleSelect, entries.map(example => ({ id: example.id, name: example.title })));

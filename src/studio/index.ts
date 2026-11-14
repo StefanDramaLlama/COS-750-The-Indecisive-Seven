@@ -48,6 +48,7 @@ let playing = false;
 let speed = 1;
 let reviewLine: string | undefined;
 let failed: { message: string; retry: () => void } | undefined;
+let currentVariant: string | undefined;
 
 function setTheme(value: string) {
   if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
@@ -481,7 +482,11 @@ async function loadWalkthrough() {
   failed = undefined;
   renderFrame(false);
   try {
-    const run = await json<Run>('/api/runs', abort.signal, { lessonId: definition.id, exampleId: current.id });
+    const run = await json<Run>('/api/runs', abort.signal, {
+      lessonId: definition.id,
+      exampleId: current.id,
+      variant: currentVariant
+    });
     if (request !== abort) return;
     current.run = run;
     current.index = 0;
@@ -516,6 +521,9 @@ function updateView() {
     if (kind === 'practice') void sendPractice({ type: 'start' });
     else void loadWalkthrough();
   }
+
+  const practice = ui.tabs.get('practice');
+  if (practice) practice.hidden = currentVariant === 'recursive'; 
 }
 
 function bindLesson() {
@@ -578,6 +586,35 @@ function bindLesson() {
   select.value = String(speed);
   enhanceSelect(select);
   select.addEventListener('change', () => { speed = Number(select.value); schedule(); });
+
+  if (ui.variantSelect) {
+    ui.variantSelect.addEventListener('change', () => {
+      currentVariant = ui!.variantSelect!.value;
+      rebuildPseudocode(lesson!);
+      void loadWalkthrough();
+    });
+  }
+}
+
+function rebuildPseudocode(lesson: Lesson) {
+  if (!ui) return;
+  const variant = lesson.variants?.find(v => v.id === (currentVariant ?? lesson.variants?.[0].id));
+  const code = variant?.code ?? lesson.code;
+  const host = ui.q('#code-lines');
+  host.replaceChildren();
+  ui.codeButtons.clear();
+  for (const [index, line] of code.entries()) {
+    const node = button('', () => {
+      // …existing click handler, copied from mountLesson…
+    }, 'code-line');
+    node.setAttribute('aria-pressed', 'false');
+    const number = element('span', String(index + 1).padStart(2, '0'), 'line-number');
+    number.setAttribute('aria-hidden', 'true');
+    node.append(number, element('code', line.text));
+    ui.codeButtons.set(line.id, node);
+    host.append(node);
+  }
+  ui.q('#line-explanation').textContent = 'Select a line to see why it is used.';
 }
 
 async function applyRoute(focus = false) {
@@ -594,6 +631,7 @@ async function applyRoute(focus = false) {
   }
 
   lesson = undefined;
+  currentVariant = undefined;
   ui = undefined;
   walkthrough = undefined;
   rehearsal = undefined;
@@ -619,6 +657,8 @@ async function applyRoute(focus = false) {
     request = undefined;
     lesson = definition;
     ui = mountLesson(main, definition, lessons);
+    currentVariant = definition.variants?.[0].id;
+    rebuildPseudocode(definition);
     document.title = `${definition.name} · Graphwise`;
     guideLink.hidden = false;
     bindLesson();

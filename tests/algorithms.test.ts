@@ -102,3 +102,9 @@ test('spanning tree runners select connected acyclic edges and explain disconnec
   assert.equal(run('kruskal', 'forest').result.kind, 'disconnected');
   assert.deepEqual(run('prim', 'isolated-site').result, { kind: 'disconnected', edges: ['A-B', 'B-C'], weight: 3, covered: ['A', 'B', 'C'] });
 });
+
+test('topological sort DFS variant returns a valid ordering', () => {
+  const example = examples['topological-sort'][0];
+  const run = runExample('topological-sort', 1, example, undefined, 'dfs');
+  assert.deepEqual(run.result, { kind: 'ordering', order: ['A', 'B', 'C', 'D', 'E'] });
+});
