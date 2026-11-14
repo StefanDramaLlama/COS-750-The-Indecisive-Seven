@@ -5,8 +5,9 @@ import { validateGraph } from './graph.ts';
 import { kruskal, prim } from './spanning.ts';
 import { topological } from './topological.ts';
 import { bfs, dfs } from './traversal.ts';
+import { compare } from './compare.ts';
 
-const runners = { basics, dijkstra, bfs, dfs, 'topological-sort': topological, kruskal, prim };
+const runners = { basics, dijkstra, bfs, dfs, 'topological-sort': topological, kruskal, prim, compare };
 
 export function runExample(lessonId: LessonId, version: number, example: Example, readyChoice?: VertexId): Run {
   validateGraph(example.graph, lessonId, example.startId, example.goalId);

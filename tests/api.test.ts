@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import test, { after } from 'node:test';
 import type { Choice, LessonId, PracticeAction, PracticeResponse, ProgressItem } from '../src/shared/contracts.ts';
 import { lessonsEndpoint, practiceEndpoint, progressEndpoint, runsEndpoint } from '../src/server/http.ts';
-import { getLesson } from '../src/server/lessons/catalog.ts';
+import { getLesson, lessonIds } from '../src/server/lessons/catalog.ts';
 import { openLocalDatabase } from '../src/server/progress.ts';
 
 const directory = mkdtempSync(join(tmpdir(), 'graphwise-test-'));
@@ -30,7 +30,7 @@ const submit = (id: LessonId, action: PracticeAction, history: Choice[] = [], co
 
 test('public routes list six lessons, validate inputs, and keep practice traces private', async () => {
   const lessonList = await (await lessonsEndpoint(request('/api/lessons'))).json();
-  assert.equal(lessonList.length, 6);
+  assert.equal(lessonList.length, lessonIds.length);
   assert.equal((await lessonsEndpoint(request('/api/lessons?id=missing'))).status, 404);
   assert.equal((await lessonsEndpoint(request('/api/lessons', {}))).status, 405);
   assert.equal((await runsEndpoint(request('/api/runs', {}))).status, 400);
@@ -85,7 +85,8 @@ const solutions = {
   bfs: [['queue', 'B'], ['hops', '2']],
   dfs: [['return', 'A'], ['unreached', 'CD']],
   kruskal: [['cycle-edge', 'skip'], ['total', '5']],
-  prim: [['first-link', 'A-B'], ['total', '3']]
+  prim: [['first-link', 'A-B'], ['total', '3']],
+  compare: [['bfs-route', 'AD'], ['dijkstra-route', 'ACD'], ['choose', 'bfs']]
 } satisfies Partial<Record<LessonId, [string, string][]>>;
 
 async function completePractice(lesson: LessonId, answers: [string, string][]) {
