@@ -42,6 +42,13 @@ For the demo, open Dijkstra and advance to **Update D to 7**. Step back to see t
 - The same handlers serve the local HTTP server and Vercel. `GET /api/lessons` returns the catalog, `POST /api/runs` returns a worked trace, `POST /api/practice` checks decisions and reveals steps, and `GET /api/progress` returns progress for the current session.
 - `db/migrations` versions the shared SQLite schema. The server uses local SQLite for development and a hosted libSQL connection when configured for Vercel.
 
+## Graph ADT pages
+
+Three pages cover the Graph ADT (definition, properties, representations and operations): `/graph-adt/undirected`, `/graph-adt/directed` and `/graph-adt/weighted`. Each page has a definition and properties section, matrix and list pictures, an Operation lab (guided walkthrough and playground with the graph and its memory side by side, step back and forward, execution log, optional sound cues and read-aloud), an operation reference with before and after pictures, prediction questions, and full TypeScript code for both representations.
+
+- `src/graphadt/engine.ts` turns a graph and a list of operations into frames (the contract is in `types.ts`). `content.ts` holds the copy and walkthrough scripts, `code.ts` the code samples, `quiz.ts` the prediction questions, `sound.ts` the audio cues, `render.ts` and `page.ts` the UI. The page entry is `graph-adt.html`.
+- `tests/graphadt.test.ts` runs the code samples against the engine, so the code shown to learners behaves like the lab.
+
 ## Vercel setup for later
 
 1. Import the GitHub repository with the repository root as the Vercel project root. `vercel.json` selects the Other preset, builds the static frontend into `dist`, and keeps lesson deep links and API routes separate.

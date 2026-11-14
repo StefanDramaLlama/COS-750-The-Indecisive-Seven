@@ -39,8 +39,9 @@ const server = createServer(async (incoming, outgoing) => {
       return;
     }
     const pathname = decodeURIComponent(url.pathname);
-    const page = pathname === '/' || /^\/algorithms(?:\/[^/]+)?\/?$/.test(pathname);
-    const file = resolve(dist, page ? 'index.html' : `.${pathname}`);
+    const adtPage = /^\/graph-adt(?:\/[^/]+)?\/?$/.test(pathname);
+    const page = adtPage || pathname === '/' || /^\/algorithms(?:\/[^/]+)?\/?$/.test(pathname);
+    const file = resolve(dist, adtPage ? 'graph-adt.html' : page ? 'index.html' : `.${pathname}`);
     if (!file.startsWith(`${dist}${sep}`) || (!page && !pathname.startsWith('/assets/'))) {
       outgoing.writeHead(404).end('Not found');
       return;
