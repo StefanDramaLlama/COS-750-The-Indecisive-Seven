@@ -49,6 +49,7 @@ let playing = false;
 let speed = 1;
 let reviewLine: string | undefined;
 let failed: { message: string; retry: () => void } | undefined;
+let currentVariant: string | undefined;
 
 function setTheme(value: string) {
   const next = value === 'dark' ? 'dark' : 'light';
@@ -245,6 +246,18 @@ function setupMobileCollapsibles() {
   addMobileCollapse(ui.q('.spatial-section'), '3D graph');
 }
 
+function renderBullets(host: HTMLElement, text: string, className?: string) {
+  if (className) host.className = className;
+  const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    host.textContent = text;
+    return;
+  }
+  const list = element('ul');
+  for (const line of lines) list.append(element('li', line));
+  host.replaceChildren(list);
+}
+
 function renderFrame(announce: boolean) {
   if (!ui) return;
   const current = activeRun();
@@ -295,11 +308,11 @@ function renderFrame(announce: boolean) {
     ui.q('.step-detail').classList.toggle('terminal', Boolean(success));
     ui.q('#step-label').textContent = terminal ? 'RESULT' : frame.index === 0 ? 'BEFORE WE BEGIN' : `CURRENT STEP / ${String(frame.index + 1).padStart(2, '0')}`;
     ui.q('#step-title').textContent = frame.title;
-    ui.q('#step-change').textContent = frame.change;
-    ui.q('#step-reason').textContent = frame.reason;
+    renderBullets(ui.q('#step-change'), frame.change);
+    renderBullets(ui.q('#step-reason'), frame.reason, 'step-reason');
     const state = ui.q('#state-panel');
-    state.hidden = false;
-    renderState(state, run.graph, frame.state);
+    state.hidden = lesson?.id === 'basics';
+    if (!state.hidden) renderState(state, run.graph, frame.state);
     addMobileCollapse(state, 'working state');
     ui.highlight(frame.lineId);
     if (announce) announcement.textContent = `Step ${frame.index + 1}. ${frame.title}. ${frame.change}`;
@@ -470,7 +483,11 @@ async function loadWalkthrough() {
   failed = undefined;
   renderFrame(false);
   try {
-    const run = await json<Run>('/api/runs', abort.signal, { lessonId: definition.id, exampleId: current.id });
+    const run = await json<Run>('/api/runs', abort.signal, {
+      lessonId: definition.id,
+      exampleId: current.id,
+      variant: currentVariant
+    });
     if (request !== abort) return;
     current.run = run;
     current.index = 0;
@@ -505,6 +522,9 @@ function updateView() {
     if (kind === 'practice') void sendPractice({ type: 'start' });
     else void loadWalkthrough();
   }
+
+  const practice = ui.tabs.get('practice');
+  if (practice) practice.hidden = currentVariant === 'recursive'; 
 }
 
 function bindLesson() {
@@ -567,6 +587,35 @@ function bindLesson() {
   select.value = String(speed);
   enhanceSelect(select);
   select.addEventListener('change', () => { speed = Number(select.value); schedule(); });
+
+  if (ui.variantSelect) {
+    ui.variantSelect.addEventListener('change', () => {
+      currentVariant = ui!.variantSelect!.value;
+      rebuildPseudocode(lesson!);
+      void loadWalkthrough();
+    });
+  }
+}
+
+function rebuildPseudocode(lesson: Lesson) {
+  if (!ui) return;
+  const variant = lesson.variants?.find(v => v.id === (currentVariant ?? lesson.variants?.[0].id));
+  const code = variant?.code ?? lesson.code;
+  const host = ui.q('#code-lines');
+  host.replaceChildren();
+  ui.codeButtons.clear();
+  for (const [index, line] of code.entries()) {
+    const node = button('', () => {
+      // …existing click handler, copied from mountLesson…
+    }, 'code-line');
+    node.setAttribute('aria-pressed', 'false');
+    const number = element('span', String(index + 1).padStart(2, '0'), 'line-number');
+    number.setAttribute('aria-hidden', 'true');
+    node.append(number, element('code', line.text));
+    ui.codeButtons.set(line.id, node);
+    host.append(node);
+  }
+  ui.q('#line-explanation').textContent = 'Select a line to see why it is used.';
 }
 
 async function applyRoute(focus = false) {
@@ -588,6 +637,7 @@ async function applyRoute(focus = false) {
   }
 
   lesson = undefined;
+  currentVariant = undefined;
   ui = undefined;
   walkthrough = undefined;
   rehearsal = undefined;
@@ -613,6 +663,8 @@ async function applyRoute(focus = false) {
     request = undefined;
     lesson = definition;
     ui = mountLesson(main, definition, lessons);
+    currentVariant = definition.variants?.[0].id;
+    rebuildPseudocode(definition);
     document.title = `${definition.name} · Graphwise`;
     guideLink.hidden = false;
     bindLesson();
