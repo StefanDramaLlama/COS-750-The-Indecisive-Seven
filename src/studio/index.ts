@@ -2,6 +2,7 @@ import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressI
 import { button, element, enhanceSelect, required } from './dom.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
+import { mountBuilder } from './builder.ts';
 import { renderState } from './state.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
@@ -51,11 +52,11 @@ let failed: { message: string; retry: () => void } | undefined;
 let currentVariant: string | undefined;
 
 function setTheme(value: string) {
-  if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
-  else delete document.documentElement.dataset.theme;
-  theme.value = value === 'light' || value === 'dark' ? value : 'system';
+  const next = value === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  theme.value = next;
 }
-try { setTheme(localStorage.getItem('graphwise-theme') ?? 'system'); } catch { setTheme('system'); }
+try { setTheme(localStorage.getItem('graphwise-theme') ?? 'light'); } catch { setTheme('light'); }
 theme.addEventListener('change', () => {
   setTheme(theme.value);
   try { localStorage.setItem('graphwise-theme', theme.value); } catch { /* The current theme still applies. */ }
@@ -618,6 +619,11 @@ function rebuildPseudocode(lesson: Lesson) {
 }
 
 async function applyRoute(focus = false) {
+  if (location.pathname === '/builder') {
+    lesson = undefined; ui = undefined; guideLink.hidden = true; renderProgress();
+    mountBuilder(main, async payload => json<Run>('/api/runs', undefined, payload));
+    return;
+  }
   const match = /^\/algorithms\/([^/]+)\/?$/.exec(location.pathname);
   const id = match?.[1];
   const mode = new URLSearchParams(location.search).get('view');
