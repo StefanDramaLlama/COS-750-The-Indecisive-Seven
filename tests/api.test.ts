@@ -86,7 +86,8 @@ const solutions = {
   dfs: [['return', 'A'], ['unreached', 'CD']],
   kruskal: [['cycle-edge', 'skip'], ['total', '5']],
   prim: [['first-link', 'A-B'], ['total', '3']],
-  compare: [['bfs-route', 'AD'], ['dijkstra-route', 'ACD'], ['choose', 'bfs']]
+  compare: [['bfs-route', 'AD'], ['dijkstra-route', 'ACD'], ['choose', 'bfs']],
+  'compare-trees': [['same-cost', 'same'], ['trenches', 'kruskal'], ['existing-code', 'prim']]
 } satisfies Partial<Record<LessonId, [string, string][]>>;
 
 async function completePractice(lesson: LessonId, answers: [string, string][]) {
