@@ -1,0 +1,246 @@
+import type { Lesson, LessonSummary, Primer } from '../shared/contracts.ts';
+import { comparisonPairs, comparisonsId, isComparison } from './compare.ts';
+import { button, element, enhanceSelect, required } from './dom.ts';
+import { createGraph } from './graph.ts';
+
+export type View = 'walkthrough' | 'pseudocode' | 'practice';
+
+export function lessonUrl(id: string, view: View = 'walkthrough') {
+  return `/algorithms/${encodeURIComponent(id)}${view === 'walkthrough' ? '' : `?view=${view}`}`;
+}
+
+export function routeLink(text: string, href: string, className?: string) {
+  const link = element('a', text, className);
+  link.href = href;
+  link.dataset.route = '';
+  return link;
+}
+
+function options(select: HTMLSelectElement, entries: { id: string; name: string }[]) {
+  select.replaceChildren(...entries.map(({ id, name }) => new Option(name, id)));
+}
+
+function renderPrimer(primer: Primer) {
+  const card = element('section', undefined, 'primer');
+  const toolbar = element('div', undefined, 'primer-controls');
+  const canvas = element('div', undefined, 'graph-area');
+  const caption = element('p');
+  const before = button('Before', () => show('before'));
+  const after = button('After', () => show('after'));
+  function show(stage: 'before' | 'after') {
+    const { graph, caption: description } = primer[stage];
+    canvas.replaceChildren(createGraph(graph, primer.positions).picture);
+    caption.textContent = description;
+    before.setAttribute('aria-pressed', String(stage === 'before'));
+    after.setAttribute('aria-pressed', String(stage === 'after'));
+  }
+  toolbar.append(before, after);
+  card.append(element('h3', primer.title), toolbar, canvas, caption, element('p', primer.takeaway));
+  show('before');
+  return card;
+}
+
+export function renderOverview(main: HTMLElement, lessons: LessonSummary[], missing: boolean) {
+  const heading = element('h1', missing ? 'Choose a lesson' : 'See graph algorithms in action.');
+  const copy = missing
+    ? 'That lesson is unavailable. Choose a lesson below to continue.'
+    : 'Follow an algorithm step by step, then apply it to a new graph. Each lesson includes an interactive graph, pseudocode, and a short practice exercise.';
+  const cards = element('div', undefined, 'overview-lessons');
+  for (const [index, lesson] of lessons.entries()) {
+    const card = routeLink('', lessonUrl(lesson.id), 'card lesson-card');
+    card.append(element('p', `LESSON ${String(index + 1).padStart(2, '0')}`, 'eyebrow'),
+      element('h2', lesson.name), element('p', lesson.category), element('span', 'Open lesson →'));
+    cards.append(card);
+  }
+  main.replaceChildren(element('p', 'COS 212 / PRE-LECTURE LEARNING', 'eyebrow'), heading, element('p', copy, 'overview-copy'), cards);
+}
+
+export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSummary[]) {
+  main.innerHTML = `
+    <div class="lesson-head">
+      <div>
+        <p id="lesson-eyebrow" class="eyebrow"></p>
+        <h1 id="lesson-title"></h1>
+        <p id="lesson-subtitle" class="lesson-subtitle" hidden></p>
+        <p id="lesson-summary"></p>
+      </div>
+      <label class="lesson-picker"><span>LESSON</span><span class="select-box"><select id="lesson-select"></select></span></label>
+    </div>
+    <div class="viewbar">
+      <nav class="views" aria-label="Lesson views"></nav>
+      <span id="saved" class="status-badge" hidden>Practice complete</span>
+    </div>
+    <div class="scenario">
+      <div><h2 id="scenario-title"></h2><p id="scenario-copy"></p></div>
+      <p class="assumption" id="assumption"></p>
+    </div>
+    <section class="notice card" id="notice" hidden aria-live="polite"><p></p><button type="button" class="button" hidden>Try again</button></section>
+    <div class="study">
+      <div class="panes">
+        <div class="graph-column">
+          <section class="graph-card card" aria-labelledby="graph-title">
+            <div class="card-header">
+              <div><h2 id="graph-title">Graph view</h2><p id="graph-meta">Interactive example</p></div>
+              <label class="select-box" id="example-picker" hidden><span class="sr-only">Example</span><select id="example-select"></select></label>
+            </div>
+            <div class="graph-area" id="graph-area"></div>
+            <ul class="legend" aria-label="Graph legend">
+              <li><i class="legend-mark mark-active" aria-hidden="true"></i>Current action</li>
+              <li><i class="legend-mark mark-known" aria-hidden="true"></i>Discovered or ready</li>
+              <li><i class="legend-mark mark-result" aria-hidden="true"></i>Processed or selected</li>
+              <li><i class="legend-mark mark-skipped" aria-hidden="true"></i>Skipped</li>
+            </ul>
+          </section>
+          <div class="controls card" role="group" aria-label="Playback controls">
+            <button id="restart" type="button" aria-label="Restart"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10V4m0 0h6M4 4l4 4a8 8 0 1 1-1 10" /></svg><span class="button-label">Restart</span></button>
+            <button id="back" type="button" aria-label="Back"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg><span class="button-label">Back</span></button>
+            <button id="play" type="button" aria-label="Play"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z" /></svg><span class="button-label">Play</span></button>
+            <button id="next" type="button" class="primary" aria-label="Next step"><span class="button-label">Next step</span><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" /></svg></button>
+            <label class="select-box"><span class="sr-only">Playback speed</span>
+              <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+            </label>
+            <span id="step-count" class="step-count"></span>
+          </div>
+          <section class="state-panel card" id="state-panel" aria-label="Algorithm working state"></section>
+        </div>
+        <div class="step-column">
+          <section class="step-detail card" aria-labelledby="step-title">
+            <p class="eyebrow" id="step-label">CURRENT STEP</p><h2 id="step-title"></h2>
+            <p id="step-change"></p><p id="step-reason" class="step-reason"></p>
+          </section>
+          <section class="practice card" id="practice-panel" hidden aria-label="Practice checkpoint"></section>
+          <section class="code-card card" aria-labelledby="code-title">
+            <header><h2 id="code-title"></h2><span class="eyebrow">PSEUDOCODE</span></header>
+            <div class="code-lines" id="code-lines"></div><p class="line-explanation" id="line-explanation"></p>
+          </section>
+        </div>
+      </div>
+      <section class="spatial-section" aria-labelledby="spatial-title">
+        <div class="spatial-heading">
+          <div><p class="eyebrow">EXPERIMENTAL VIEW</p><h2 id="spatial-title">Step into the graph</h2><p>Drag to orbit around the nodes. Scroll to move through the algorithm one frame at a time.</p></div>
+          <span class="spatial-badge">3D / SCROLL</span>
+        </div>
+        <div class="spatial-viewport" id="spatial-graph-area" tabindex="0" aria-describedby="spatial-scroll-hint"></div>
+        <div class="spatial-controls" role="group" aria-label="3D playback controls">
+          <button id="spatial-restart" type="button" aria-label="Restart"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10V4m0 0h6M4 4l4 4a8 8 0 1 1-1 10" /></svg><span class="button-label">Restart</span></button>
+          <button id="spatial-back" type="button" aria-label="Back"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg><span class="button-label">Back</span></button>
+          <button id="spatial-play" type="button" aria-label="Play"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z" /></svg><span id="spatial-play-label" class="button-label">Play</span></button>
+          <button id="spatial-next" type="button" class="primary" aria-label="Next step"><span class="button-label">Next step</span><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" /></svg></button>
+          <label class="spatial-toggle"><input id="spatial-focus" type="checkbox" checked><span class="focus-label-full">Focus active node</span><span class="focus-label-short">Focus</span></label>
+        </div>
+        <p class="graph-scroll-hint" id="spatial-scroll-hint">Drag to orbit. Pinch to zoom. Scroll up or down to move through the steps. Labels stay attached to each vertex.</p>
+      </section>
+      <details class="guide card" id="learning-guide">
+        <summary>Learning guide &amp; graph concepts</summary>
+        <div class="guide-content" id="guide-content"></div>
+      </details>
+    </div>`;
+  const q = <T extends HTMLElement>(selector: string) => required<T>(main, selector);
+  const comparing = isComparison(lesson.id);
+  const courseId = comparing ? comparisonsId : lesson.id;
+  const number = lessons.findIndex(item => item.id === courseId) + 1;
+  q('#lesson-eyebrow').textContent = `ALGORITHM STUDIO / ${String(number).padStart(2, '0')} · ${comparing ? 'ALGORITHM CHOICE' : lesson.category.toUpperCase()}`;
+  q('#lesson-title').textContent = comparing ? 'Comparisons' : lesson.name;
+  if (!comparing) {
+    const subtitle = q('#lesson-subtitle');
+    subtitle.textContent = lesson.title;
+    subtitle.hidden = false;
+  }
+  q('#lesson-summary').textContent = comparing
+    ? 'Choose a pair to see how the algorithms solve the same problem. Complete both practice exercises to finish the lesson.'
+    : lesson.summary;
+  q('#assumption').textContent = lesson.prerequisites;
+  q('#code-title').textContent = lesson.name;
+  const lessonSelect = q<HTMLSelectElement>('#lesson-select');
+  options(lessonSelect, lessons);
+  lessonSelect.value = courseId;
+  enhanceSelect(lessonSelect);
+  const pairStatuses = new Map<LessonSummary['id'], HTMLElement>();
+  if (comparing) {
+    const picker = element('nav', undefined, 'comparison-picker');
+    picker.setAttribute('aria-label', 'Choose an algorithm pair');
+    for (const pair of comparisonPairs) {
+      const link = routeLink('', lessonUrl(pair.id), 'comparison-choice');
+      if (pair.id === lesson.id) link.setAttribute('aria-current', 'true');
+      const status = element('span', '✓ Practice complete', 'comparison-status');
+      status.hidden = true;
+      pairStatuses.set(pair.id, status);
+      link.append(element('strong', pair.name), element('span', pair.topic, 'comparison-topic'), status);
+      picker.append(link);
+    }
+    q('.viewbar').before(picker);
+  }
+  const tabs = new Map<View, HTMLAnchorElement>();
+  for (const [name, title] of [['walkthrough', comparing ? 'Side by side' : 'Walkthrough'], ['pseudocode', 'Pseudocode'], ['practice', 'Practice']] as const) {
+    const link = routeLink(title, lessonUrl(lesson.id, name));
+    q('.views').append(link);
+    tabs.set(name, link);
+  }
+
+  if (lesson.variants) {
+    const picker = element('select', undefined, 'variant-select') as HTMLSelectElement;
+    picker.id = 'variant-select';
+    picker.setAttribute('aria-label', 'Algorithm variant');
+    for (const v of lesson.variants) picker.append(new Option(v.label, v.id));
+    picker.value = lesson.variants[0].id;
+    q('#code-title').after(picker);
+  }
+
+  const code = q('#code-lines');
+  const explanation = q('#line-explanation');
+  const codeButtons = new Map<string, HTMLButtonElement>();
+  let inspected: string | undefined;
+  const resetExplanation = () => { explanation.textContent = 'Select a line to see why it is used.'; };
+  resetExplanation();
+  for (const [index, line] of lesson.code.entries()) {
+    const node = button('', () => {
+      inspected = inspected === line.id ? undefined : line.id;
+      for (const [id, item] of codeButtons) item.setAttribute('aria-pressed', String(id === inspected));
+      if (inspected) explanation.textContent = line.explanation;
+      else resetExplanation();
+    }, 'code-line');
+    node.setAttribute('aria-pressed', 'false');
+    const number = element('span', String(index + 1).padStart(2, '0'), 'line-number');
+    number.setAttribute('aria-hidden', 'true');
+    node.append(number, element('code', line.text));
+    codeButtons.set(line.id, node);
+    code.append(node);
+  }
+
+  const guide = q('#guide-content');
+  guide.append(element('p', lesson.complexity));
+  const objectives = element('ul');
+  lesson.objectives.forEach((objective, index) => objectives.append(element('li', `LO${index + 2} · ${objective}`)));
+  const primers = element('div', undefined, 'primers');
+  for (const primer of lesson.primers) primers.append(renderPrimer(primer));
+  guide.append(objectives, primers);
+
+  const exampleSelect = q<HTMLSelectElement>('#example-select');
+  return {
+    q, tabs, codeButtons, lessonSelect, exampleSelect, pairStatuses,
+    variantSelect: lesson.variants ? q<HTMLSelectElement>('#variant-select') : undefined,
+    setExamples(kind: 'walkthrough' | 'practice', id: string) {
+      const entries = lesson.examples.filter(example => example.kind === kind);
+      options(exampleSelect, entries.map(example => ({ id: example.id, name: example.title })));
+      exampleSelect.value = id;
+      enhanceSelect(exampleSelect).refresh();
+      q('#example-picker').hidden = entries.length < 2;
+      const selected = entries.find(example => example.id === id)!;
+      q('#scenario-title').textContent = selected.title;
+      q('#scenario-copy').textContent = selected.scenario;
+    },
+    highlight(lineId: string | null) {
+      for (const [id, item] of codeButtons) {
+        if (id === lineId) item.setAttribute('aria-current', 'step');
+        else item.removeAttribute('aria-current');
+      }
+      const active = lineId ? codeButtons.get(lineId) : undefined;
+      if (active) {
+        const line = active.getBoundingClientRect();
+        const box = code.getBoundingClientRect();
+        if (line.bottom > box.bottom) code.scrollTop += line.bottom - box.bottom;
+        if (line.top < box.top) code.scrollTop += line.top - box.top;
+      }
+    }
+  };
+}
