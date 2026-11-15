@@ -157,6 +157,38 @@ const content: Record<LessonId, LessonContent> = {
       line('finish', 'return the tree, or the partial tree when no crossing edge exists', 'A partial tree covers only the component of the selected start.')
     ]
   },
+  compare: {
+    version: 1,
+    name: 'Choose an algorithm', category: 'Beyond efficiency · BFS or Dijkstra',
+    title: 'Pick the algorithm that fits the data.',
+    summary: 'Run BFS and Dijkstra on the same graph and see what, besides speed, decides between them.',
+    prerequisites: 'The BFS and Dijkstra lessons', complexity: 'BFS O(V + E) with a queue · Dijkstra O(V² + E) with a distance table',
+    objectives: ['Explain why edge weights decide whether BFS or Dijkstra finds the right route.', 'Justify choosing the simpler algorithm when both give the same answer.'],
+    primers: [primers.weights],
+    code: [
+      line('bfs', 'bfs(graph, start): count hops with a plain queue', 'BFS ignores the weights: every edge counts as one hop.'),
+      line('dijkstra', 'dijkstra(graph, start): add up weights with a priority queue', 'Dijkstra needs a priority queue and distance updates, so it is more code to write and test.'),
+      line('weights', 'if the edges have different weights: use dijkstra', 'The route with the fewest hops is not always the cheapest, so BFS can return the wrong route.'),
+      line('equal', 'else: bfs and dijkstra return the same route', 'With no weights, or equal weights, the cheapest route is the one with the fewest hops.'),
+      line('finish', '  same route: choose the code that is simpler to write and maintain', 'When both are correct, programming time and maintainability decide.')
+    ]
+  },
+  'compare-trees': {
+    version: 1,
+    name: 'Choose a spanning-tree algorithm', category: 'Beyond efficiency · Kruskal or Prim',
+    title: 'Same cost, so other factors decide.',
+    summary: 'Run Kruskal and Prim on the same graph and see what, besides speed, decides between them.',
+    prerequisites: 'The Kruskal and Prim lessons', complexity: 'Kruskal O(E log E) with a sort · Prim O(V²) with an array',
+    objectives: ['Explain why Kruskal and Prim always build trees with the same total cost.', 'Justify choosing Kruskal or Prim from the input format and the code already written.'],
+    primers: [primers.cycles],
+    code: [
+      line('kruskal', 'kruskal(graph): sort the links by cost, skip any that close a loop', 'Kruskal works from a list of links. It needs the list sorted and a structure that tracks which sites are already joined.'),
+      line('prim', 'prim(graph, start): grow one tree by the cheapest link to a new site', 'Prim is almost the same algorithm as Dijkstra: only the priority changes. On a simple array it needs no priority queue and no structure for tracking joined groups.'),
+      line('same', 'both trees have the same total cost', 'Both return a minimum spanning tree. When two links cost the same the trees can differ, but the total cannot.'),
+      line('factors', 'if the input is a list of links: kruskal; if any site can link to any other: prim', 'Kruskal sorts the list it is given. When every site can link to every other, Prim on an array is less code.'),
+      line('finish', 'same cost: choose the code that fits the input and the code you already have', 'When both are correct, the input format, programming time and existing code decide.')
+    ]
+  },
   review: {
     version: 1,
     name: 'Algorithm Review',

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import test, { after } from 'node:test';
 import type { Choice, LessonId, PracticeAction, PracticeResponse, ProgressItem } from '../src/shared/contracts.ts';
 import { lessonsEndpoint, practiceEndpoint, progressEndpoint, runsEndpoint } from '../src/server/http.ts';
-import { getLesson } from '../src/server/lessons/catalog.ts';
+import { getLesson, lessonIds } from '../src/server/lessons/catalog.ts';
 import { openLocalDatabase } from '../src/server/progress.ts';
 
 const directory = mkdtempSync(join(tmpdir(), 'graphwise-test-'));
@@ -28,9 +28,9 @@ const submit = (id: LessonId, action: PracticeAction, history: Choice[] = [], co
     action, version, acceptedChoices: history
   }, cookie));
 
-test('public routes list eight lessons, validate inputs, and keep practice traces private', async () => {
+test('public routes list catalogue lessons, validate inputs, and keep practice traces private', async () => {
   const lessonList = await (await lessonsEndpoint(request('/api/lessons'))).json();
-  assert.equal(lessonList.length, 8);
+  assert.equal(lessonList.length, lessonIds.length);
   assert.equal((await lessonsEndpoint(request('/api/lessons?id=missing'))).status, 404);
   assert.equal((await lessonsEndpoint(request('/api/lessons', {}))).status, 405);
   assert.equal((await runsEndpoint(request('/api/runs', {}))).status, 400);
@@ -85,7 +85,9 @@ const solutions = {
   bfs: [['queue', 'B'], ['hops', '2']],
   dfs: [['return', 'A'], ['unreached', 'CD']],
   kruskal: [['cycle-edge', 'skip'], ['total', '5']],
-  prim: [['first-link', 'A-B'], ['total', '3']]
+  prim: [['first-link', 'A-B'], ['total', '3']],
+  compare: [['bfs-route', 'AD'], ['dijkstra-route', 'ACD'], ['choose', 'bfs']],
+  'compare-trees': [['same-cost', 'same'], ['trenches', 'kruskal'], ['existing-code', 'prim']]
 } satisfies Partial<Record<LessonId, [string, string][]>>;
 
 async function completePractice(lesson: LessonId, answers: [string, string][]) {
@@ -113,5 +115,18 @@ test('Kahn continues from either learner-chosen ready task', async () => {
   for (const [choice, order] of [['B', 'ABCDE'], ['C', 'ACBDE']]) {
     const result = await completePractice('topological-sort', [['ready', choice], ['prerequisites', 'both']]);
     assert.deepEqual(result, { kind: 'ordering', order: [...order] });
+  }
+});
+
+test('Review and Quiz each accept all ten checkpoints', async () => {
+  const answers: [string, string][] = [
+    ['graph-parts', 'nodes-edges'], ['dijkstra-settle', 'smallest'],
+    ['bfs-structure', 'queue'], ['dfs-structure', 'stack'],
+    ['topological-ready', 'zero-indegree'], ['kruskal-skip', 'component'],
+    ['prim-crossing', 'crossing'], ['mixed-bfs', 'bfs'],
+    ['mixed-dijkstra', 'dijkstra'], ['mixed-mst', 'kruskal-prim']
+  ];
+  for (const lesson of ['review', 'quiz'] as const) {
+    assert.equal((await completePractice(lesson, answers))?.kind, 'path');
   }
 });

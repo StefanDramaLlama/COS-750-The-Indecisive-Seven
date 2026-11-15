@@ -1,9 +1,11 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
 import { button, element, enhanceSelect, required } from './dom.ts';
+import { createComparison } from './compare.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
 import { mountBuilder } from './builder.ts';
 import { renderState } from './state.ts';
+import { captureScreen, TutorPanel } from './tutor.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
 
@@ -29,6 +31,9 @@ const announcement = required(document, '#announcement');
 const theme = required<HTMLSelectElement>(document, '#theme');
 const accent = required<HTMLSelectElement>(document, '#accent');
 const clock = required<HTMLTimeElement>(document, '#clock');
+const tutor = new TutorPanel(captureScreen, json);
+
+new MutationObserver(() => tutor.refreshContext()).observe(main, { childList: true, subtree: true, characterData: true });
 
 let lessons: LessonSummary[] = [];
 let progress: ProgressItem[] = [];
@@ -41,6 +46,7 @@ let selection: string | undefined;
 let canvas: { key: string; graph: ReturnType<typeof createGraph> } | undefined;
 let spatialCanvas: { key: string; graph: ReturnType<typeof createGraph> } | undefined;
 let spatialScene: { key: string; graph: ReturnType<typeof createSpatialGraph> } | undefined;
+let comparison: ReturnType<typeof createComparison> | undefined;
 let request: AbortController | undefined;
 let progressRequest = 0;
 let busy = false;
@@ -249,6 +255,7 @@ function setupMobileCollapsibles() {
   addMobileCollapse(ui.q('.code-card'), 'pseudocode');
   addMobileCollapse(ui.q('.practice'), 'practice');
   addMobileCollapse(ui.q('.spatial-section'), '3D graph');
+  if (comparison) addMobileCollapse(ui.q('.compare-card'), 'side by side');
 }
 
 function renderBullets(host: HTMLElement, text: string, className?: string) {
@@ -324,6 +331,7 @@ function renderFrame(announce: boolean) {
   }
   renderControls();
   renderPractice();
+  comparison?.update(view === 'walkthrough' ? walkthrough : undefined);
   setupMobileCollapsibles();
   renderNotice();
 }
@@ -668,12 +676,9 @@ async function applyRoute(focus = false) {
   }
   if (id === 'review' && !reviewUnlocked()) {
     document.title = 'Graphwise · Algorithm Studio';
-    renderOverview(main, lessons, true);
-    const notice = required(document, '#notice');
-    const message = required(notice, 'p');
-    notice.hidden = false;
-    message.textContent = 'Complete all seven algorithm lessons before taking the review.';
-    required<HTMLButtonElement>(notice, 'button').hidden = true;
+    renderOverview(main, lessons, false);
+    const message = element('p', 'Complete Graph Basics and the six algorithm lessons to unlock the review.', 'notice card');
+    main.querySelector('.overview-lessons')?.before(message);
     if (focus) main.focus({ preventScroll: true });
     return;
   }
@@ -686,6 +691,7 @@ async function applyRoute(focus = false) {
     request = undefined;
     lesson = definition;
     ui = mountLesson(main, definition, lessons);
+    comparison = definition.id === 'compare' || definition.id === 'compare-trees' ? createComparison(ui.q('.graph-column'), definition.id) : undefined;
     currentVariant = definition.variants?.[0].id;
     rebuildPseudocode(definition);
     document.title = `${definition.name} · Graphwise`;
@@ -736,8 +742,9 @@ document.addEventListener('visibilitychange', () => {
 async function boot() {
   try {
     lessons = await json<LessonSummary[]>('/api/lessons');
+    if (/^\/algorithms\/review\/?$/.test(location.pathname)) await refreshProgress();
+    else void refreshProgress();
     void applyRoute();
-    void refreshProgress();
   } catch {
     main.replaceChildren(element('h1', 'The studio couldn’t load.'), button('Try again', () => { void boot(); }, 'button primary'));
   }

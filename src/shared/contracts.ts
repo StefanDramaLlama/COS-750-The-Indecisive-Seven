@@ -1,4 +1,4 @@
-export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'review' | 'quiz';
+export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'compare' | 'compare-trees' | 'review' | 'quiz';
 export type VertexId = string;
 export type EdgeId = string;
 
@@ -127,4 +127,17 @@ export interface ProgressItem {
   version: number;
   startedAt: string;
   completedAt: string | null;
+}
+export type TutorMode = "answer" | "simpler" | "deeper";
+
+export interface TutorMessage {
+  role: "user" | "model";
+  text: string;
+}
+
+export interface TutorRequest {
+  mode: TutorMode;
+  /** Text captured from the learner's screen. */
+  context: string;
+  messages: TutorMessage[];
 }

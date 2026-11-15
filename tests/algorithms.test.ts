@@ -11,14 +11,17 @@ function run(id: LessonId, exampleId?: string) {
 }
 
 const worked: Record<LessonId, RunResult> = {
-  basics: { kind: 'traversal', order: ['A', 'B', 'C', 'D'] },
+  basics: { kind: 'traversal', order: ['A', 'B', 'C'] },
   dijkstra: { kind: 'path', vertices: ['A', 'B', 'D'], edges: ['A-B', 'B-D'], cost: 7 },
   bfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'], path: ['A', 'B', 'D'], hops: 2 },
   dfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'] },
   'topological-sort': { kind: 'ordering', order: ['A', 'B', 'C', 'D', 'E'] },
   kruskal: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
   prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
-  review: { kind: 'path', vertices: ['A', 'B', 'C', 'E'], edges: ['A-B', 'B-C', 'C-E'], cost: 6 }
+  compare: { kind: 'path', vertices: ['A', 'B', 'C', 'D'], edges: ['A-B', 'B-C', 'C-D'], cost: 6 },
+  'compare-trees': { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
+  review: { kind: 'path', vertices: ['A', 'B', 'C', 'E'], edges: ['A-B', 'B-C', 'C-E'], cost: 6 },
+  quiz: { kind: 'path', vertices: ['A', 'B', 'C', 'E'], edges: ['A-B', 'B-C', 'C-E'], cost: 6 },
 };
 
 for (const id of lessonIds) {
