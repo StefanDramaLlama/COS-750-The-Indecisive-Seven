@@ -7,6 +7,7 @@ import { getLesson, getLessons, isLessonId } from './lessons/catalog.ts';
 import { examples } from './lessons/fixtures.ts';
 import { practice, PracticeError } from './practice.ts';
 import { learnerId, readProgress, saveProgress, sessionCookie } from './progress.ts';
+import { gradeQuiz, publicQuiz } from './quiz.ts';
 import { askTutor, parseTtsRequest, parseTutorRequest, speak } from './tutor.ts';
 
 const invalid = (message: string) => new RequestError(400, 'INVALID_REQUEST', message);
@@ -132,6 +133,30 @@ export const progressEndpoint = endpoint('GET', async request => {
 });
 
 const noStore = { headers: { 'Cache-Control': 'no-store' } };
+
+async function requireQuizAccess(request: Request): Promise<void> {
+  const id = learnerId(request);
+  const progress = id ? await readProgress(id) : [];
+  const unlocked = getLessons().every(lesson => progress.some(item =>
+    item.lessonId === lesson.id && item.version === lesson.version && item.completedAt
+  ));
+  if (!unlocked) throw new RequestError(403, 'QUIZ_LOCKED', 'Complete the Practice section of every Studio lesson to unlock the quiz.');
+}
+
+const quizQuestionsEndpoint = endpoint('GET', async request => {
+  await requireQuizAccess(request);
+  return Response.json(publicQuiz(), noStore);
+});
+const quizSubmissionEndpoint = endpoint('POST', async request => {
+  await requireQuizAccess(request);
+  const { answers } = await body(request);
+  return Response.json(gradeQuiz(answers), noStore);
+});
+
+export const quizEndpoint = (request: Request) => request.method === 'GET' ? quizQuestionsEndpoint(request)
+  : request.method === 'POST' ? quizSubmissionEndpoint(request)
+  : Response.json({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Use GET or POST for the quiz.' } },
+    { status: 405, headers: { Allow: 'GET, POST', 'Cache-Control': 'no-store' } });
 
 export const tutorEndpoint = endpoint('POST', async request => {
   const question = parseTutorRequest(await body(request, tutorBodyLimit));

@@ -15,7 +15,7 @@ const at = (event: string, vertex?: string, edge?: string) => (run: Run) => run.
 const beforeFinish = (run: Run) => run.frames.length - 2;
 const oneAnswer = (correct: string) => (_frame: TraceFrame, optionId: string) => optionId === correct;
 
-const lessonCheckpoints: Record<Exclude<LessonId, 'quiz'>, Checkpoint[]> = {
+export const checkpoints: Record<LessonId, Checkpoint[]> = {
   basics: [
     {
       prompt: {
@@ -180,122 +180,8 @@ const lessonCheckpoints: Record<Exclude<LessonId, 'quiz'>, Checkpoint[]> = {
       hint: 'Prim and Dijkstra both grow from a start and take the cheapest next site from a priority queue. What would Kruskal need that the code does not have?',
       correct: 'Prim. It is Dijkstra with one change: the priority is the cost of the link itself, not the distance from the start. Kruskal would need a sort and a structure to track joined groups.'
     }
-  ],
-  review: [
-    {
-      prompt: {
-        id: 'graph-parts',
-        question: 'What two components make up every graph?',
-        options: options(['nodes-edges', 'Nodes and edges'], ['weights-labels', 'Weights and labels'], ['paths-cycles', 'Paths and cycles']),
-        reviewLineId: 'settle'
-      },
-      at: (run) => 2, accepts: oneAnswer('nodes-edges'),
-      hint: 'Look at the picture: dots and the lines between them.',
-      correct: 'A graph is a set of nodes (vertices) joined by edges.'
-    },
-    {
-      prompt: {
-        id: 'dijkstra-settle',
-        question: 'Which vertex does Dijkstra settle next?',
-        options: options(['smallest', 'The unsettled vertex with the smallest distance'], ['first', 'The first vertex in the graph'], ['goal', 'The goal vertex immediately']),
-        reviewLineId: 'settle'
-      },
-      at: (run) => 4, accepts: oneAnswer('smallest'),
-      hint: 'Dijkstra always picks the smallest finite estimate among unsettled vertices.',
-      correct: 'With nonnegative weights, the smallest estimate is final.'
-    },
-    {
-      prompt: {
-        id: 'bfs-structure',
-        question: 'What data structure does BFS use, and in what order?',
-        options: options(['queue', 'A queue — first-in, first-out, layer by layer'], ['stack', 'A stack — last-in, first-out'], ['heap', 'A priority queue — by distance']),
-        reviewLineId: 'consider'
-      },
-      at: (run) => 6, accepts: oneAnswer('queue'),
-      hint: 'BFS visits vertices one layer at a time.',
-      correct: 'BFS uses a FIFO queue and processes vertices in arrival order.'
-    },
-    {
-      prompt: {
-        id: 'dfs-structure',
-        question: 'What data structure does DFS use to explore?',
-        options: options(['stack', 'A stack (the call stack)'], ['queue', 'A queue'], ['set', 'A hash set']),
-        reviewLineId: 'relax'
-      },
-      at: (run) => 8, accepts: oneAnswer('stack'),
-      hint: 'DFS follows a branch as far as possible before backtracking.',
-      correct: 'DFS uses a stack and explores each branch to its end.'
-    },
-    {
-      prompt: {
-        id: 'topological-ready',
-        question: 'What makes a task ready to place in topological sort?',
-        options: options(['zero-indegree', 'It has zero remaining incoming edges'], ['highest-cost', 'It has the highest cost'], ['no-outgoing', 'It has no outgoing edges']),
-        reviewLineId: 'consider'
-      },
-      at: (run) => 10, accepts: oneAnswer('zero-indegree'),
-      hint: 'Incoming edges are prerequisites still to be placed.',
-      correct: 'A task is ready when all its prerequisites have been placed.'
-    },
-    {
-      prompt: {
-        id: 'kruskal-skip',
-        question: 'When does Kruskal skip an edge?',
-        options: options(['component', 'When its endpoints already share a component'], ['cheapest', 'When it is the cheapest edge'], ['zero', 'When it has weight zero']),
-        reviewLineId: 'relax'
-      },
-      at: (run) => 12, accepts: oneAnswer('component'),
-      hint: 'Adding a link between already connected vertices closes a cycle.',
-      correct: 'Kruskal skips any edge whose endpoints are already connected.'
-    },
-    {
-      prompt: {
-        id: 'prim-crossing',
-        question: 'Which edges can Prim add next?',
-        options: options(['crossing', 'Only crossing edges — one endpoint in the tree, one outside'], ['any', 'Any edge in the graph'], ['start', 'Only edges touching the start vertex']),
-        reviewLineId: 'settle'
-      },
-      at: (run) => 14, accepts: oneAnswer('crossing'),
-      hint: 'Only edges crossing the frontier can expand the tree.',
-      correct: 'Prim grows one tree by adding the cheapest crossing edge.'
-    },
-    {
-      prompt: {
-        id: 'mixed-bfs',
-        question: 'Which algorithm finds the fewest-hop route in an unweighted graph?',
-        options: options(['bfs', 'Breadth-first search'], ['dijkstra', 'Dijkstra'], ['kruskal', 'Kruskal']),
-        reviewLineId: 'consider'
-      },
-      at: (run) => 16, accepts: oneAnswer('bfs'),
-      hint: 'BFS counts hops and finds the shortest unweighted path.',
-      correct: 'BFS explores layer by layer, so the first discovery is the fewest hops.'
-    },
-    {
-      prompt: {
-        id: 'mixed-dijkstra',
-        question: 'Which algorithm finds the lowest-cost route in a weighted graph with nonnegative weights?',
-        options: options(['dijkstra', 'Dijkstra'], ['bfs', 'Breadth-first search'], ['dfs', 'Depth-first search']),
-        reviewLineId: 'relax'
-      },
-      at: (run) => 18, accepts: oneAnswer('dijkstra'),
-      hint: 'Dijkstra minimizes the sum of edge weights along a route.',
-      correct: 'Dijkstra settles the smallest-distance vertex first, guaranteeing the lowest cost.'
-    },
-    {
-      prompt: {
-        id: 'mixed-mst',
-        question: 'Which two algorithms build a minimum spanning tree?',
-        options: options(['kruskal-prim', 'Kruskal and Prim'], ['dijkstra-bfs', 'Dijkstra and BFS'], ['dfs-topo', 'DFS and topological sort']),
-        reviewLineId: 'finish'
-      },
-      at: (run) => 20, accepts: oneAnswer('kruskal-prim'),
-      hint: 'Both are greedy algorithms that avoid cycle-forming edges.',
-      correct: 'Kruskal sorts edges globally; Prim grows one tree from a start vertex.'
-    }
   ]
 };
-
-export const checkpoints: Record<LessonId, Checkpoint[]> = { ...lessonCheckpoints, quiz: lessonCheckpoints.review };
 
 export class PracticeError extends Error {}
 

@@ -1,4 +1,4 @@
-export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'compare' | 'compare-trees' | 'review' | 'quiz';
+export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'compare' | 'compare-trees';
 export type VertexId = string;
 export type EdgeId = string;
 
@@ -141,3 +141,23 @@ export interface TutorRequest {
   context: string;
   messages: TutorMessage[];
 }
+
+export const QUIZ_WRITTEN_LIMIT = 1000;
+
+export type QuizQuestion = {
+  id: number;
+  topic: string;
+  prompt: string;
+} & (
+  | { kind: 'choice'; options: { id: string; text: string }[] }
+  | { kind: 'written' }
+);
+
+export type QuizResult = {
+  correct: number;
+  total: number;
+  feedback: (
+    | { id: number; kind: 'choice'; correct: boolean; answer: string; explanation: string }
+    | { id: number; kind: 'written'; modelAnswer: string }
+  )[];
+};

@@ -39,12 +39,6 @@ const anyToAny = makeGraph(abcd, [['A', 'B', 2], ['A', 'C', 3], ['A', 'D', 5], [
 const basicsGraph = makeGraph({ A: 'A', B: 'B', C: 'C' }, [['A', 'B', 4], ['B', 'C']], true);
 const basicsPositions: Positions = { A: [90, 125], B: [230, 125], C: [370, 125] };
 
-const reviewLabels = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E' };
-const reviewGraph = makeGraph(reviewLabels, [
-  ['A', 'B', 2], ['A', 'C', 4], ['B', 'C', 1], ['B', 'D', 5], ['C', 'D', 2], ['C', 'E', 3], ['D', 'E', 1]
-]);
-const reviewPositions: Positions = { A: [60, 125], B: [190, 54], C: [190, 196], D: [340, 54], E: [420, 125] };
-
 export const examples = {
 
   basics: [
@@ -90,14 +84,6 @@ export const examples = {
   'compare-trees': [
     example('site-links', 'walkthrough', 'Two trees for four sites', 'Connect all four sites for the lowest cost. Kruskal and Prim run on the same links, and Prim starts at A.', links(3, 4), mst, 'A'),
     example('any-building', 'practice', 'Any building to any other', 'Each of four buildings can link to every other one, and each number is the cost of a link. Prim starts at A. Predict how the two trees compare, then choose an algorithm for each case.', anyToAny, hub, 'A')
-  ],
-  review: [
-    example('weighted-route', 'walkthrough', 'A weighted route', 'Dijkstra finds the lowest-cost route from A to E across five sites.', reviewGraph, reviewPositions, 'A', 'E'),
-    example('weighted-route-practice', 'practice', 'Algorithm review', 'A randomized set of questions spanning all seven algorithm lessons.', reviewGraph, reviewPositions, 'A', 'E')
-  ],
-  quiz: [
-    example('quiz-graph', 'walkthrough', 'Quiz graph', 'A weighted graph used for quiz questions across all algorithm lessons.', reviewGraph, reviewPositions, 'A', 'E'),
-    example('quiz-practice', 'practice', 'Algorithm quiz', 'Open quiz questions spanning every lesson. No prerequisites.', reviewGraph, reviewPositions, 'A', 'E')
   ]
 };
 

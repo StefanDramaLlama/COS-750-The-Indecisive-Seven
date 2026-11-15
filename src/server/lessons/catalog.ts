@@ -159,7 +159,7 @@ const content: Record<LessonId, LessonContent> = {
   },
   compare: {
     version: 1,
-    name: 'Choose an algorithm', category: 'Beyond efficiency · BFS or Dijkstra',
+    name: 'BFS vs. Dijkstra', category: 'Shortest-path comparison',
     title: 'Pick the algorithm that fits the data.',
     summary: 'Run BFS and Dijkstra on the same graph and see what, besides speed, decides between them.',
     prerequisites: 'The BFS and Dijkstra lessons', complexity: 'BFS O(V + E) with a queue · Dijkstra O(V² + E) with a distance table',
@@ -175,7 +175,7 @@ const content: Record<LessonId, LessonContent> = {
   },
   'compare-trees': {
     version: 1,
-    name: 'Choose a spanning-tree algorithm', category: 'Beyond efficiency · Kruskal or Prim',
+    name: 'Kruskal vs. Prim', category: 'Minimum spanning tree comparison',
     title: 'Same cost, so other factors decide.',
     summary: 'Run Kruskal and Prim on the same graph and see what, besides speed, decides between them.',
     prerequisites: 'The Kruskal and Prim lessons', complexity: 'Kruskal O(E log E) with a sort · Prim O(V²) with an array',
@@ -187,48 +187,6 @@ const content: Record<LessonId, LessonContent> = {
       line('same', 'both trees have the same total cost', 'Both return a minimum spanning tree. When two links cost the same the trees can differ, but the total cannot.'),
       line('factors', 'if the input is a list of links: kruskal; if any site can link to any other: prim', 'Kruskal sorts the list it is given. When every site can link to every other, Prim on an array is less code.'),
       line('finish', 'same cost: choose the code that fits the input and the code you already have', 'When both are correct, the input format, programming time and existing code decide.')
-    ]
-  },
-  review: {
-    version: 1,
-    name: 'Algorithm Review',
-    category: 'Review · all algorithms',
-    title: 'Randomized questions across every lesson.',
-    summary: 'A mixed quiz spanning graph basics, Dijkstra, BFS, DFS, topological sort, Kruskal, and Prim.',
-    prerequisites: 'Complete the six algorithm lessons first',
-    complexity: 'Mixed review — no new algorithm',
-    objectives: [
-      'Identify which algorithm fits a given problem.',
-      'Trace estimates, queues, stacks, components, and dependency orders across algorithms.'
-    ],
-    primers: [],
-    code: [
-      line('initialize', 'distance = ∞ for every vertex; distance[start] = 0', 'Start with zero cost at the source and no known routes to the other vertices.'),
-      line('settle', 'u = unsettled vertex with smallest distance; settle u', 'Choose the smallest estimate. All edge weights are nonnegative, so this estimate is final.'),
-      line('consider', 'for each unsettled neighbor v of u: candidate = distance[u] + weight(u, v)', 'Try reaching the neighbor by extending the route to u by one edge.'),
-      line('relax', 'if candidate < distance[v]: update distance[v] and predecessor[v]', 'Keep the new estimate and edge only if the candidate improves the current estimate.'),
-      line('finish', 'return the predecessor path or report unreachable', 'Follow predecessor edges backwards from the goal. An infinite goal distance means no route was found.')
-    ]
-  },
-  quiz: {
-    version: 1,
-    name: 'Algorithm Quiz',
-    category: 'Quiz · open to all',
-    title: 'Open quiz questions on every algorithm.',
-    summary: 'Practice questions spanning graph basics, Dijkstra, BFS, DFS, topological sort, Kruskal, and Prim. No prerequisites — open to anyone.',
-    prerequisites: 'None — open to all learners',
-    complexity: 'Mixed quiz — no new algorithm',
-    objectives: [
-      'Identify which algorithm fits a given problem.',
-      'Apply graph concepts across all seven lessons.'
-    ],
-    primers: [],
-    code: [
-      line('initialize', 'distance = ∞ for every vertex; distance[start] = 0', 'Start with zero cost at the source and no known routes to the other vertices.'),
-      line('settle', 'u = unsettled vertex with smallest distance; settle u', 'Choose the smallest estimate. All edge weights are nonnegative, so this estimate is final.'),
-      line('consider', 'for each unsettled neighbor v of u: candidate = distance[u] + weight(u, v)', 'Try reaching the neighbor by extending the route to u by one edge.'),
-      line('relax', 'if candidate < distance[v]: update distance[v] and predecessor[v]', 'Keep the new estimate and edge only if the candidate improves the current estimate.'),
-      line('finish', 'return the predecessor path or report unreachable', 'Follow predecessor edges backwards from the goal. An infinite goal distance means no route was found.')
     ]
   }
 };

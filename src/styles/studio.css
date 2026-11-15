@@ -141,8 +141,9 @@ select option { background: var(--surface-solid); color: var(--text); }
 .menu-toggle, .mobile-brand { display: none; }
 .content { width: min(100%, 1540px); margin: 0 auto; padding: 52px clamp(16px, 4vw, 64px) 72px; }
 .lesson-head { position: relative; z-index: 5; display: flex; justify-content: space-between; align-items: end; gap: 22px; margin-bottom: 19px; }
-h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(34px, 4.5vw, 66px); font-weight: 700; line-height: .98; letter-spacing: -.045em; }
+h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-size: clamp(34px, 4.5vw, 66px); font-weight: 700; line-height: 1.08; letter-spacing: -.045em; }
 .lesson-head p:not(.eyebrow), .overview-copy { max-width: 680px; color: var(--muted); margin-top: 8px; }
+.lesson-head p.lesson-subtitle { color: var(--text); font-size: clamp(16px, 2vw, 20px); font-weight: 700; }
 .lesson-picker { display: grid; gap: 4px; flex: 0 0 auto; }
 .lesson-picker > span { font-size: 10px; font-weight: 750; letter-spacing: .1em; color: var(--muted); }
 .lesson-picker select { width: 194px; }
@@ -295,17 +296,24 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
 .primer .graph-area { margin: 8px 0; background-color: var(--surface); }
 .primer .graph-area svg { max-height: 220px; }
 .primer p + p { color: var(--muted); margin-top: 5px; }
+.comparison-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.comparison-choice { display: grid; align-content: start; padding: 12px 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-decoration: none; }
+.comparison-choice:hover, .comparison-choice[aria-current] { border-color: var(--cyan); }
+.comparison-choice[aria-current] { background: var(--cyan-soft); box-shadow: inset 0 0 0 1px var(--cyan); }
+.comparison-choice[aria-current] strong { color: var(--cyan); }
+.comparison-topic, .comparison-status { color: var(--muted); font-size: 12px; }
+.comparison-status { margin-top: 4px; color: var(--green); font-weight: 750; }
 .compare-card .primer-controls { margin-top: 0; }
-.compare-graphs, .compare-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px; margin: 10px 13px 0; }
-.compare-graphs h3 { font-size: 13px; }
+.compare-takeaway { margin: 10px 15px 0; font-size: 14px; font-weight: 650; }
+.compare-graphs, .compare-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin: 13px 15px 0; }
+.compare-graphs h3 { font-size: 14px; }
 .compare-graphs .graph-area { margin: 6px 0 0; }
 .compare-graphs .node-id { font-size: 19px; }
 .compare-graphs :is(.node-known, .node-complete) .node-id { fill: var(--text); }
 .compare-graphs .edge-weight { font-size: 17px; }
 .compare-graphs p { color: var(--muted); font-size: 12px; }
 .compare-graphs .compare-route { margin-top: 6px; color: var(--text); font: 700 13px ui-monospace, monospace; }
-.compare-unweighted .edge-weight { visibility: hidden; }
-.compare-notes { margin: 0 13px 13px; font-size: 13px; }
+.compare-notes { margin: 0 15px 15px; font-size: 13px; }
 .overview-copy { font-size: 16px; }
 .overview-lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 12px; margin-top: 22px; }
 .lesson-card { padding: 17px; text-decoration: none; display: grid; gap: 5px; }
@@ -412,7 +420,8 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
   .step-detail { order: 3; }
   .state-panel { order: 4; }
   .practice { order: 5; }
-  .compare-card { order: 4; padding: 12px; }
+  .compare-graphs, .compare-notes { grid-template-columns: 1fr; }
+  .comparison-choice { padding: 9px 11px; }
   .code-card, .pseudocode-view .code-card { order: 6; }
   .pseudocode-view .code-card { order: 6; }
   .guide { order: 7; margin-top: 2px; }
@@ -486,3 +495,24 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
 .step-detail li::marker {
   color: var(--cyan);
 }
+.quiz-page { max-width: 800px; margin-inline: auto; }
+.quiz-lock-label { margin-inline-start: auto; color: var(--muted); font-size: 11px; }
+.quiz-card { margin-top: 24px; padding: clamp(18px, 4vw, 32px); }
+.quiz-card > .button { margin-top: 14px; }
+.quiz-card > h2 { margin: 6px 0 18px; }
+.quiz-toolbar, .quiz-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.quiz-toolbar { justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.quiz-progress, .quiz-jump { color: var(--muted); font-size: 13px; }
+.quiz-jump select { margin-inline-start: 4px; width: 4.5rem; padding: 5px 8px; }
+.quiz-response { display: grid; gap: 8px; margin-bottom: 22px; }
+.quiz-option { display: flex; align-items: baseline; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; }
+.quiz-option:has(input:checked) { background: var(--cyan-soft); border-color: var(--cyan); }
+.quiz-option input { accent-color: var(--button); }
+.quiz-jump select, .quiz-response textarea { font: inherit; color: var(--text); background: var(--surface-solid); border: 1px solid var(--line); border-radius: 8px; }
+.quiz-response textarea { padding: 10px 12px; resize: vertical; width: 100%; box-sizing: border-box; }
+.quiz-controls .primary { margin-inline-start: auto; }
+.quiz-message:not(:empty) { margin-top: 12px; color: var(--muted); }
+.quiz-feedback { margin-top: 18px; overflow-wrap: anywhere; }
+.quiz-feedback details { border-top: 1px solid var(--line); padding: 10px 0; }
+.quiz-feedback summary { cursor: pointer; }
+.quiz-feedback p { margin: 8px 0 0 18px; }

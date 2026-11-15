@@ -67,9 +67,11 @@ The visual language takes cues from iOS and the portfolio's floating glass navig
 
 Accessibility is treated as part of the layout. Text uses a dark blue ink color against pale surfaces, and the dark theme swaps to light text and deeper surfaces through the same semantic variables. Focus-visible outlines are retained for keyboard users, controls have stable touch-sized targets, graph state is also described in text and live announcements, and `prefers-reduced-motion` disables playback and decorative movement. Color is paired with labels, borders, and state text so a learner does not need to distinguish color alone.
 
-## Section 8 · Algorithm Review Questions
+## Section 8 · Algorithm Quiz Question Bank
 
-These questions draw across all seven lessons — graph basics, Dijkstra, BFS, DFS, topological sort, Kruskal, and Prim — in randomized order. Use them to check whether you can apply each algorithm to a fresh graph rather than just recognize its steps.
+Algorithm Quiz unlocks after you complete Practice for every Studio lesson, including both pairs in the Comparisons lesson. Comparisons opens with the results side by side. Choose BFS vs. Dijkstra to compare shortest paths or Kruskal vs. Prim to compare minimum spanning trees.
+
+The quiz uses these 48 questions and scores the first 42. After submission, you can compare your six written responses with model answers. The answer choices are shuffled when the quiz loads.
 
 ### Graph foundations
 

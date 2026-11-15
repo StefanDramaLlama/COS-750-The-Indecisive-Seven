@@ -20,8 +20,6 @@ const worked: Record<LessonId, RunResult> = {
   prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
   compare: { kind: 'path', vertices: ['A', 'B', 'C', 'D'], edges: ['A-B', 'B-C', 'C-D'], cost: 6 },
   'compare-trees': { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
-  review: { kind: 'path', vertices: ['A', 'B', 'C', 'E'], edges: ['A-B', 'B-C', 'C-E'], cost: 6 },
-  quiz: { kind: 'path', vertices: ['A', 'B', 'C', 'E'], edges: ['A-B', 'B-C', 'C-E'], cost: 6 },
 };
 
 for (const id of lessonIds) {

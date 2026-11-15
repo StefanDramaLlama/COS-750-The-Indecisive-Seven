@@ -13,8 +13,7 @@ type Runner = (example: Example, choice?: VertexId) => { frames: TraceFrame[]; r
 const runners: Record<LessonId, Runner> = {
   basics, dijkstra, bfs, dfs,
   'topological-sort': topological,
-  kruskal, prim, compare, 'compare-trees': compareTrees,
-  review: dijkstra, quiz: dijkstra
+  kruskal, prim, compare, 'compare-trees': compareTrees
 };
 
 export function runExample(
@@ -24,8 +23,7 @@ export function runExample(
   readyChoice?: VertexId,
   variant?: string
 ): Run {
-  const validationLesson = lessonId === 'review' || lessonId === 'quiz' ? 'dijkstra' : lessonId;
-  validateGraph(example.graph, validationLesson, example.startId, example.goalId);
+  validateGraph(example.graph, lessonId, example.startId, example.goalId);
   const run = lessonId === 'topological-sort'
   ? topological(example, readyChoice, (variant as 'iterative' | 'recursive' | undefined) ?? 'iterative')
   : runners[lessonId](example, readyChoice);
