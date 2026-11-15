@@ -293,6 +293,17 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
 .primer .graph-area { margin: 8px 0; background-color: var(--surface); }
 .primer .graph-area svg { max-height: 220px; }
 .primer p + p { color: var(--muted); margin-top: 5px; }
+.compare-card .primer-controls { margin-top: 0; }
+.compare-graphs, .compare-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px; margin: 10px 13px 0; }
+.compare-graphs h3 { font-size: 13px; }
+.compare-graphs .graph-area { margin: 6px 0 0; }
+.compare-graphs .node-id { font-size: 19px; }
+.compare-graphs :is(.node-known, .node-complete) .node-id { fill: var(--text); }
+.compare-graphs .edge-weight { font-size: 17px; }
+.compare-graphs p { color: var(--muted); font-size: 12px; }
+.compare-graphs .compare-route { margin-top: 6px; color: var(--text); font: 700 13px ui-monospace, monospace; }
+.compare-unweighted .edge-weight { visibility: hidden; }
+.compare-notes { margin: 0 13px 13px; font-size: 13px; }
 .overview-copy { font-size: 16px; }
 .overview-lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 12px; margin-top: 22px; }
 .lesson-card { padding: 17px; text-decoration: none; display: grid; gap: 5px; }
@@ -399,6 +410,7 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
   .step-detail { order: 3; }
   .state-panel { order: 4; }
   .practice { order: 5; }
+  .compare-card { order: 4; margin-bottom: 10px; }
   .code-card, .pseudocode-view .code-card { order: 6; }
   .pseudocode-view .code-card { order: 6; }
   .guide { order: 7; margin-top: 2px; }
