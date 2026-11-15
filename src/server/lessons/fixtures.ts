@@ -36,16 +36,18 @@ const detour = makeGraph(abcd, [['A', 'B', 2], ['B', 'C', 2], ['C', 'D', 2], ['A
 const shortcut = makeGraph(abcd, [['A', 'B', 4], ['A', 'C', 1], ['B', 'D', 4], ['C', 'D', 1], ['A', 'D', 9]]);
 const hub: Positions = { A: [230, 150], B: [80, 205], C: [230, 40], D: [380, 205] };
 const anyToAny = makeGraph(abcd, [['A', 'B', 2], ['A', 'C', 3], ['A', 'D', 5], ['B', 'C', 4], ['B', 'D', 6], ['C', 'D', 1]]);
+const basicsGraph = makeGraph({ A: 'A', B: 'B', C: 'C' }, [['A', 'B', 4], ['B', 'C']], true);
+const basicsPositions: Positions = { A: [90, 125], B: [230, 125], C: [370, 125] };
 
 export const examples = {
 
   basics: [
     example('labelled-graph', 'walkthrough', 'A small labelled graph',
-      'Look at the nodes, edges, arrowheads, and weights before you continue.',
-      makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['C', 'D', 3]]), diamond),
+      'Read the picture before the words: three dots, two lines, one number.',
+      basicsGraph, basicsPositions),
     example('labelled-graph-practice', 'practice', 'Name the parts',
-      'Answer three quick questions about nodes and edges before you start the algorithms.',
-      makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['C', 'D', 3]]), diamond)
+      'Answer three questions about the picture before the algorithm lessons begin.',
+      basicsGraph, basicsPositions)
   ],
   dijkstra: [
     example('weighted-diamond', 'walkthrough', 'The weighted diamond', 'Find the lowest-cost delivery route from A to D. Each edge label is its delivery cost.', routes(10), diamond, 'A', 'D'),
