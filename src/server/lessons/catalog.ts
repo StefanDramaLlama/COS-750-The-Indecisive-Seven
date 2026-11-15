@@ -20,11 +20,11 @@ const content: Record<LessonId, LessonContent> = {
     primers: [primers.direction, primers.cycles, primers.connectivity, primers.weights],
     code: [
       line('graph', 'A graph is a set of nodes joined by edges.',
-        'Graphs model anything made of items and connections: roads, friendships, dependencies, networks.'),
+        'A graph is exactly that: nodes, and edges joining them. Everything else builds on those two sets.'),
       line('node', 'A node (vertex) is one item in the graph.',
-        'A node has a label. When drawn, it also has a position. A graph with 4 nodes has 4 vertices.'),
+        'A node has a label. When drawn, it also has a position. A graph with three nodes has three vertices.'),
       line('edge', 'An edge (link) joins two nodes.',
-        'An edge connects a pair of nodes. If it has an arrowhead it is directed; if it carries a number it is weighted.'),
+        'An edge connects a pair of nodes. An arrowhead makes it directed; a number makes it weighted.'),
       line('finish', 'Every algorithm in this studio works on a graph like this one.',
         'The rest of the lessons turn these ideas into procedures.')
     ]
@@ -90,7 +90,41 @@ const content: Record<LessonId, LessonContent> = {
       line('place', 'while ready is nonempty: remove a ready vertex u and append it to order', 'Any ready vertex can go next. Choosing a different one can produce another valid ordering.'),
       line('release', '  for each outgoing neighbor v: decrement indegree[v]; enqueue v when it reaches 0', 'Placing u satisfies one prerequisite of each outgoing neighbor.'),
       line('finish', 'return order if all vertices were placed; otherwise report a cycle', 'A cycle leaves some prerequisites unresolved and can also block tasks downstream.')
-    ]
+    ],
+    variants: [
+    {
+      id: 'iterative',
+      label: 'Iterative',
+      code: [
+        line('count',   'indegree = count incoming edges; ready = vertices with indegree 0',
+          'Incoming edges represent prerequisites still to be placed.'),
+        line('place',   'while ready is nonempty: remove a ready vertex u and append it to order',
+          'Any ready vertex can go next. Choosing a different one can produce another valid ordering.'),
+        line('release', '  for each outgoing neighbor v: decrement indegree[v]; enqueue v when it reaches 0',
+          'Placing u satisfies one prerequisite of each outgoing neighbor.'),
+        line('finish',  'return order if all vertices were placed; otherwise report a cycle',
+          'A cycle leaves some prerequisites unresolved and can also block tasks downstream.')
+      ]
+    },
+    {
+      id: 'recursive',
+      label: 'Recursive',
+      code: [
+        line('enter',      'visit(u): mark u visiting; explore its outgoing edges',
+          'A vertex stays on the recursion stack until every successor is visited.'),
+        line('cycle',      'if a successor is still on the stack: report a cycle',
+          'A back-edge means a prerequisite chain leads back to its own start. No topological order exists.'),
+        line('skip',       'if a successor is already finished: skip it',
+          'Re-visiting a finished vertex would duplicate it in the output.'),
+        line('descend',    'follow the edge to an unvisited successor',
+          'The order of appends is "last to finish first."'),
+        line('finish-one', 'after all successors: mark u finished, append u to postorder',
+          'This is the "post" part of postorder: a vertex is appended only after its descendants.'),
+        line('finish',     'return the reverse of the postorder as the ordering',
+          'Reversing puts each prerequisite before the tasks that need it.')
+      ]
+    }
+  ]
   },
   kruskal: {
     version: 1,

@@ -36,7 +36,11 @@ export interface Primer {
   positions: Positions;
   takeaway: string;
 }
-
+export interface CodeVariant {
+  id: string;            
+  label: string;          
+  code: CodeLine[];
+}
 export interface Lesson extends LessonSummary {
   title: string;
   summary: string;
@@ -45,7 +49,8 @@ export interface Lesson extends LessonSummary {
   objectives: [string, string];
   code: CodeLine[];
   examples: ExampleDescriptor[];
-  primers: Primer[];
+  primers: Primer[];       
+  variants?: CodeVariant[];     
 }
 
 type Distances = Record<VertexId, number | null>;

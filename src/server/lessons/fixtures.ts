@@ -31,16 +31,18 @@ const dependencies: Link[] = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['C', 'D'], ['
 const project = makeGraph(taskLabels, dependencies, true);
 const links = (ac: number, cd: number) => makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['A', 'C', ac], ['C', 'D', cd]]);
 const brokenLinks = makeGraph(abcd, [['A', 'B', 1], ['A', 'C', 3], ['B', 'C', 2]]);
+const basicsGraph = makeGraph({ A: 'A', B: 'B', C: 'C' }, [['A', 'B', 4], ['B', 'C']], true);
+const basicsPositions: Positions = { A: [90, 125], B: [230, 125], C: [370, 125] };
 
 export const examples = {
 
   basics: [
     example('labelled-graph', 'walkthrough', 'A small labelled graph',
-      'Look at the nodes, edges, arrowheads, and weights before you continue.',
-      makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['C', 'D', 3]]), diamond),
+      'Read the picture before the words: three dots, two lines, one number.',
+      basicsGraph, basicsPositions),
     example('labelled-graph-practice', 'practice', 'Name the parts',
-      'Answer three quick questions about nodes and edges before you start the algorithms.',
-      makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['C', 'D', 3]]), diamond)
+      'Answer three questions about the picture before the algorithm lessons begin.',
+      basicsGraph, basicsPositions)
   ],
   dijkstra: [
     example('weighted-diamond', 'walkthrough', 'The weighted diamond', 'Find the lowest-cost delivery route from A to D. Each edge label is its delivery cost.', routes(10), diamond, 'A', 'D'),
