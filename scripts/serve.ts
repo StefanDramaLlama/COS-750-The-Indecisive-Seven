@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
-import { lessonsEndpoint, practiceEndpoint, progressEndpoint, runsEndpoint, ttsEndpoint, tutorBodyLimit, tutorEndpoint } from '../src/server/http.ts';
+import { lessonsEndpoint, practiceEndpoint, progressEndpoint, quizEndpoint, runsEndpoint, ttsEndpoint, tutorBodyLimit, tutorEndpoint } from '../src/server/http.ts';
 
 const endpoints = new Map([
   ['/api/lessons', lessonsEndpoint], ['/api/runs', runsEndpoint],
   ['/api/practice', practiceEndpoint], ['/api/progress', progressEndpoint],
-  ['/api/tutor', tutorEndpoint], ['/api/tts', ttsEndpoint]
+  ['/api/tutor', tutorEndpoint], ['/api/tts', ttsEndpoint], ['/api/quiz', quizEndpoint]
 ]);
 const types: Record<string, string> = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml' };
 const port = Number(process.env.PORT || 4173);

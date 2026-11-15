@@ -1,9 +1,10 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
 import { button, element, enhanceSelect, required } from './dom.ts';
-import { createComparison } from './compare.ts';
+import { comparisonPairs, comparisonsId, createComparison, isComparison } from './compare.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
 import { mountBuilder } from './builder.ts';
+import { mountQuiz } from './quiz.ts';
 import { renderState } from './state.ts';
 import { captureScreen, TutorPanel } from './tutor.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
@@ -24,6 +25,8 @@ async function json<T>(path: string, signal?: AbortSignal, body?: unknown): Prom
 
 const main = required(document, '#main');
 const nav = required(document, '#lesson-links');
+const quizNav = required(document, '#quiz-nav');
+const quizLock = required(document, '#quiz-lock-label');
 const courseNav = required(document, '#course-nav');
 const menu = required<HTMLButtonElement>(document, '.menu-toggle');
 const guideLink = required(document, '#guide-link');
@@ -36,6 +39,7 @@ const tutor = new TutorPanel(captureScreen, json);
 new MutationObserver(() => tutor.refreshContext()).observe(main, { childList: true, subtree: true, characterData: true });
 
 let lessons: LessonSummary[] = [];
+let courseLessons: LessonSummary[] = [];
 let progress: ProgressItem[] = [];
 let lesson: Lesson | undefined;
 let ui: ReturnType<typeof mountLesson> | undefined;
@@ -109,17 +113,22 @@ guideLink.addEventListener('click', () => {
 function renderProgress() {
   const completed = new Set(lessons.filter(lesson => progress.some(item => item.lessonId === lesson.id &&
     item.version === lesson.version && item.completedAt)).map(lesson => lesson.id));
+  const isComplete = (id: LessonSummary['id']) => id === comparisonsId
+    ? comparisonPairs.every(pair => completed.has(pair.id))
+    : completed.has(id);
+  const courseCompleted = courseLessons.filter(item => isComplete(item.id)).length;
   const meter = required<HTMLProgressElement>(document, '#course-progress');
-  meter.max = lessons.length || 6;
-  meter.value = completed.size;
-  required(document, '#progress-count').textContent = `${completed.size} of ${meter.max} lessons complete`;
-  nav.replaceChildren(...lessons.map((item, index) => {
+  meter.max = courseLessons.length || 8;
+  meter.value = courseCompleted;
+  quizLock.hidden = lessons.length > 0 && completed.size === lessons.length;
+  required(document, '#progress-count').textContent = `${courseCompleted} of ${meter.max} lessons complete`;
+  nav.replaceChildren(...courseLessons.map((item, index) => {
     const link = routeLink('', lessonUrl(item.id), 'lesson-link');
     const number = element('span', String(index + 1).padStart(2, '0'), 'lesson-number');
     number.setAttribute('aria-hidden', 'true');
     link.append(number, element('span', item.name));
-    if (item.id === lesson?.id) link.setAttribute('aria-current', 'page');
-    if (completed.has(item.id)) {
+    if (item.id === (isComparison(lesson?.id) ? comparisonsId : lesson?.id)) link.setAttribute('aria-current', 'page');
+    if (isComplete(item.id)) {
       const mark = element('span', '✓', 'lesson-done');
       mark.setAttribute('aria-label', 'Complete');
       link.append(mark);
@@ -129,7 +138,10 @@ function renderProgress() {
   const studio = required(document, '.studio-nav');
   if (lesson) studio.setAttribute('aria-current', 'true');
   else studio.removeAttribute('aria-current');
-  if (lesson && ui) ui.q('#saved').hidden = !progress.some(item => item.lessonId === lesson?.id && item.version === lesson.version && item.completedAt);
+  if (lesson && ui) {
+    ui.q('#saved').hidden = isComparison(lesson.id) || !completed.has(lesson.id);
+    for (const [id, status] of ui.pairStatuses) status.hidden = !completed.has(id);
+  }
 }
 
 async function refreshProgress() {
@@ -217,7 +229,7 @@ function renderNotice() {
   const message = required(notice, 'p');
   const retry = required<HTMLButtonElement>(notice, 'button');
   notice.hidden = !busy && !failed;
-  message.textContent = failed?.message ?? (busy ? 'Loading the next step…' : '');
+  message.textContent = failed?.message ?? (busy ? (comparison && view === 'walkthrough' ? 'Loading the comparison…' : 'Loading the next step…') : '');
   retry.hidden = !failed;
   retry.onclick = failed?.retry ?? null;
 }
@@ -250,7 +262,6 @@ function setupMobileCollapsibles() {
   addMobileCollapse(ui.q('.code-card'), 'pseudocode');
   addMobileCollapse(ui.q('.practice'), 'practice');
   addMobileCollapse(ui.q('.spatial-section'), '3D graph');
-  if (comparison) addMobileCollapse(ui.q('.compare-card'), 'side by side');
 }
 
 function renderBullets(host: HTMLElement, text: string, className?: string) {
@@ -267,6 +278,12 @@ function renderBullets(host: HTMLElement, text: string, className?: string) {
 
 function renderFrame(announce: boolean) {
   if (!ui) return;
+  const sideBySide = comparison && view === 'walkthrough';
+  comparison?.update(sideBySide ? walkthrough?.run : undefined);
+  if (sideBySide) {
+    renderNotice();
+    return;
+  }
   const current = activeRun();
   const run = current?.run;
   const frame = run?.frames[current!.index];
@@ -326,7 +343,6 @@ function renderFrame(announce: boolean) {
   }
   renderControls();
   renderPractice();
-  comparison?.update(view === 'walkthrough' ? walkthrough : undefined);
   setupMobileCollapsibles();
   renderNotice();
 }
@@ -399,7 +415,7 @@ function renderPractice() {
     }, 'button primary');
     submit.disabled = busy || !selection;
     actions.append(submit, practiceButton('Show a hint', 'hint', () => { void sendPractice({ type: 'hint', checkpointId: prompt.id }); }));
-    const review = routeLink('Review this step', lessonUrl(lesson.id), 'button');
+    const review = routeLink('Review this step', lessonUrl(lesson.id, isComparison(lesson.id) ? 'pseudocode' : 'walkthrough'), 'button');
     review.dataset.review = prompt.reviewLineId;
     actions.append(review);
     host.append(options, actions);
@@ -407,8 +423,15 @@ function renderPractice() {
     const heading = element('h2', 'You applied the algorithm');
     heading.tabIndex = -1;
     host.append(heading, element('p', 'Think back to the rule you used at each checkpoint. Your completion is saved.'));
-    const next = lessons[lessons.findIndex(item => item.id === lesson?.id) + 1];
-    host.append(routeLink(next ? `Next lesson · ${next.name}` : 'Return to lessons', next ? lessonUrl(next.id) : '/algorithms', 'button primary'));
+    if (isComparison(lesson.id)) {
+      const other = comparisonPairs.find(pair => pair.id !== lesson?.id)!;
+      const otherLesson = lessons.find(item => item.id === other.id);
+      const otherComplete = progress.some(item => item.lessonId === other.id && item.version === otherLesson?.version && item.completedAt);
+      host.append(routeLink(otherComplete ? 'Return to lessons' : `Compare ${other.name}`, otherComplete ? '/algorithms' : lessonUrl(other.id), 'button primary'));
+    } else {
+      const next = courseLessons[courseLessons.findIndex(item => item.id === lesson?.id) + 1];
+      host.append(routeLink(next ? `Next lesson · ${next.name}` : 'Return to lessons', next ? lessonUrl(next.id) : '/algorithms', 'button primary'));
+    }
   }
   if (atCheckpoint && run.feedback) {
     const feedback = element('div', undefined, `feedback ${run.feedback.kind}`);
@@ -524,6 +547,8 @@ function updateView() {
     else tab.removeAttribute('aria-current');
   }
   ui.q('.study').classList.toggle('pseudocode-view', view === 'pseudocode');
+  ui.q('.study').hidden = Boolean(comparison && view === 'walkthrough');
+  guideLink.hidden = ui.q('.study').hidden;
   if (kind === 'walkthrough') jumpToReview();
   renderFrame(false);
   if (!current.run) {
@@ -610,30 +635,44 @@ function rebuildPseudocode(lesson: Lesson) {
   const variant = lesson.variants?.find(v => v.id === (currentVariant ?? lesson.variants?.[0].id));
   const code = variant?.code ?? lesson.code;
   const host = ui.q('#code-lines');
+  const explanation = ui.q('#line-explanation');
+  const buttons = ui.codeButtons;
   host.replaceChildren();
-  ui.codeButtons.clear();
+  buttons.clear();
+  let inspected: string | undefined;
+  const resetExplanation = () => { explanation.textContent = 'Select a line to see why it is used.'; };
+  resetExplanation();
   for (const [index, line] of code.entries()) {
     const node = button('', () => {
-      // …existing click handler, copied from mountLesson…
+      inspected = inspected === line.id ? undefined : line.id;
+      for (const [id, item] of buttons) item.setAttribute('aria-pressed', String(id === inspected));
+      if (inspected) explanation.textContent = line.explanation;
+      else resetExplanation();
     }, 'code-line');
     node.setAttribute('aria-pressed', 'false');
     const number = element('span', String(index + 1).padStart(2, '0'), 'line-number');
     number.setAttribute('aria-hidden', 'true');
     node.append(number, element('code', line.text));
-    ui.codeButtons.set(line.id, node);
+    buttons.set(line.id, node);
     host.append(node);
   }
-  ui.q('#line-explanation').textContent = 'Select a line to see why it is used.';
 }
 
 async function applyRoute(focus = false) {
+  quizNav.removeAttribute('aria-current');
   if (location.pathname === '/builder') {
-    lesson = undefined; ui = undefined; guideLink.hidden = true; renderProgress();
+    pause();
+    cancelRequest();
+    lesson = undefined; ui = undefined; comparison = undefined; guideLink.hidden = true; renderProgress();
     mountBuilder(main, async payload => json<Run>('/api/runs', undefined, payload));
     return;
   }
   const match = /^\/algorithms\/([^/]+)\/?$/.exec(location.pathname);
-  const id = match?.[1];
+  let id = match?.[1];
+  if (id === 'review') {
+    history.replaceState(null, '', '/algorithms/quiz');
+    id = 'quiz';
+  }
   const mode = new URLSearchParams(location.search).get('view');
   view = mode === 'practice' || mode === 'pseudocode' ? mode : 'walkthrough';
   pause();
@@ -647,6 +686,7 @@ async function applyRoute(focus = false) {
   lesson = undefined;
   currentVariant = undefined;
   ui = undefined;
+  comparison = undefined;
   walkthrough = undefined;
   rehearsal = undefined;
   canvas = undefined;
@@ -656,13 +696,34 @@ async function applyRoute(focus = false) {
   selection = undefined;
   guideLink.hidden = true;
   renderProgress();
+  if (id === 'quiz') {
+    quizNav.setAttribute('aria-current', 'page');
+    document.title = 'Algorithm Quiz · Graphwise';
+    main.replaceChildren(element('h1', 'Loading the quiz…'));
+    const abort = request = new AbortController();
+    try {
+      await mountQuiz(main, json, abort.signal);
+      if (focus && request === abort) main.focus({ preventScroll: true });
+    } catch (error) {
+      if (request === abort) {
+        if (error instanceof ApiError && error.status === 403) {
+          const card = element('section', undefined, 'card quiz-card');
+          card.append(element('p', error.message), routeLink('Go to Studio lessons', '/algorithms', 'button primary'));
+          main.replaceChildren(element('h1', 'Algorithm Quiz is locked'), card);
+          if (focus) main.focus({ preventScroll: true });
+        } else {
+          main.replaceChildren(element('h1', 'The quiz couldn’t load.'), button('Try again', () => { void applyRoute(true); }, 'button primary'));
+        }
+      }
+    }
+    return;
+  }
   if (!id || !lessons.some(item => item.id === id)) {
     document.title = 'Graphwise · Algorithm Studio';
-    renderOverview(main, lessons, Boolean(id));
+    renderOverview(main, courseLessons, Boolean(id));
     if (focus) main.focus({ preventScroll: true });
     return;
   }
-
   main.replaceChildren(element('p', 'GRAPHWISE / ALGORITHM STUDIO', 'eyebrow'), element('h1', 'Loading the lesson…'));
   const abort = request = new AbortController();
   try {
@@ -670,12 +731,11 @@ async function applyRoute(focus = false) {
     if (request !== abort) return;
     request = undefined;
     lesson = definition;
-    ui = mountLesson(main, definition, lessons);
-    comparison = definition.id === 'compare' || definition.id === 'compare-trees' ? createComparison(ui.q('.graph-column'), definition.id) : undefined;
+    ui = mountLesson(main, definition, courseLessons);
+    comparison = isComparison(definition.id) ? createComparison(ui.q('.study'), definition.id) : undefined;
     currentVariant = definition.variants?.[0].id;
     rebuildPseudocode(definition);
-    document.title = `${definition.name} · Graphwise`;
-    guideLink.hidden = false;
+    document.title = `${comparison ? `${definition.name} · Comparisons` : definition.name} · Graphwise`;
     bindLesson();
     renderProgress();
     updateView();
@@ -722,8 +782,11 @@ document.addEventListener('visibilitychange', () => {
 async function boot() {
   try {
     lessons = await json<LessonSummary[]>('/api/lessons');
-    void applyRoute();
+    courseLessons = lessons.flatMap(item => item.id === comparisonsId
+      ? [{ ...item, name: 'Comparisons', category: 'Shortest paths and minimum spanning trees' }]
+      : isComparison(item.id) ? [] : [item]);
     void refreshProgress();
+    void applyRoute();
   } catch {
     main.replaceChildren(element('h1', 'The studio couldn’t load.'), button('Try again', () => { void boot(); }, 'button primary'));
   }

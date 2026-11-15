@@ -500,7 +500,7 @@ export function captureScreen(): { label: string; text: string } {
   const tab = read('.views [aria-current="page"]');
   const step = read("#step-count");
   const label = [title, tab, step].filter(Boolean).join(" · ");
-  const graph = main?.querySelector("#graph-area svg desc")?.textContent;
+  const graph = read("#graph-area svg desc");
   const visible = [
     read(".scenario"),
     read(".step-detail"),

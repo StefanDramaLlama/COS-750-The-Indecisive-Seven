@@ -11,7 +11,7 @@ function run(id: LessonId, exampleId?: string) {
 }
 
 const worked: Record<LessonId, RunResult> = {
-  basics: { kind: 'traversal', order: ['A', 'B', 'C', 'D'] },
+  basics: { kind: 'traversal', order: ['A', 'B', 'C'] },
   dijkstra: { kind: 'path', vertices: ['A', 'B', 'D'], edges: ['A-B', 'B-D'], cost: 7 },
   bfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'], path: ['A', 'B', 'D'], hops: 2 },
   dfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'] },

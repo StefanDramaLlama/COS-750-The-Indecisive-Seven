@@ -19,7 +19,7 @@ const initial: BuilderState = {
 export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<string, unknown>) => Promise<Run>) {
   const state: BuilderState = structuredClone(initial);
   let zoom = 1;
-  main.innerHTML = `<section class="builder-page"><p class="eyebrow">GRAPHWISE / GRAPH BUILDER</p><h1>Build a graph, then run it.</h1><p class="builder-intro">Place vertices on the grid, connect them, and see how each algorithm responds to your structure.</p><div class="builder-layout"><section id="builder-canvas-section" class="builder-canvas card" aria-labelledby="builder-canvas-title"><header><div><h2 id="builder-canvas-title">Your graph</h2><p>Drag a node to place it. Select two nodes to connect them. Select an edge to edit its weight.</p></div><div class="builder-actions"><button id="builder-add" type="button">Add node</button><button id="builder-clear" type="button">Clear</button><div class="builder-zoom" role="group" aria-label="Grid zoom"><button id="builder-zoom-out" type="button" aria-label="Zoom out">−</button><output id="builder-zoom-value">100%</output><button id="builder-zoom-in" type="button" aria-label="Zoom in">+</button></div></div></header><div id="builder-grid" class="builder-grid"></div></section><aside id="builder-panel-section" class="builder-panel card" aria-labelledby="builder-settings-title"><h2 id="builder-settings-title">Run settings</h2><div class="builder-panel-body"><label class="builder-algorithm-field">Algorithm<span class="select-box"><select id="builder-algorithm">${algorithms.map(item => `<option value="${item.id}">${item.name}</option>`).join('')}</select></span></label><label class="builder-check"><input id="builder-directed" type="checkbox"> Directed edges</label><label class="builder-check"><input id="builder-weighted" type="checkbox"> Add edge weights</label><label id="builder-weight-label" class="builder-weight-field">Selected edge weight<input id="builder-weight" type="number" min="0" step="1" disabled></label><p id="builder-help" class="builder-help">Select two nodes to add an edge.</p><button id="builder-run" class="button primary" type="button">Run algorithm</button><div id="builder-error" class="builder-error" role="alert" hidden></div></div></aside></div><section id="builder-result" class="builder-result card" hidden aria-live="polite"></section></section>`;
+  main.innerHTML = `<section class="builder-page"><p class="eyebrow">GRAPHWISE / GRAPH BUILDER</p><h1>Build a graph, then run it.</h1><p class="builder-intro">Place vertices on the grid, connect them, and see how each algorithm responds to your structure.</p><div class="builder-layout"><section id="builder-canvas-section" class="builder-canvas card" aria-labelledby="builder-canvas-title"><header><div><h2 id="builder-canvas-title">Your graph</h2><p>Drag a node to place it. Select two nodes to connect them. Select an edge to edit its weight.</p></div><div class="builder-actions"><button id="builder-add" type="button">Add node</button><button id="builder-delete" type="button">Delete node</button><button id="builder-clear" type="button">Clear</button><div class="builder-zoom" role="group" aria-label="Grid zoom"><button id="builder-zoom-out" type="button" aria-label="Zoom out">−</button><output id="builder-zoom-value">100%</output><button id="builder-zoom-in" type="button" aria-label="Zoom in">+</button></div></div></header><div id="builder-grid" class="builder-grid"></div></section><aside id="builder-panel-section" class="builder-panel card" aria-labelledby="builder-settings-title"><h2 id="builder-settings-title">Run settings</h2><div class="builder-panel-body"><label class="builder-algorithm-field">Algorithm<span class="select-box"><select id="builder-algorithm">${algorithms.map(item => `<option value="${item.id}">${item.name}</option>`).join('')}</select></span></label><label class="builder-check"><input id="builder-directed" type="checkbox"> Directed edges</label><label class="builder-check"><input id="builder-weighted" type="checkbox"> Add edge weights</label><label id="builder-weight-label" class="builder-weight-field">Selected edge weight<input id="builder-weight" type="number" min="0" step="1" disabled></label><p id="builder-help" class="builder-help">Select two nodes to add an edge.</p><button id="builder-run" class="button primary" type="button">Run algorithm</button><div id="builder-error" class="builder-error" role="alert" hidden></div></div></aside></div><section id="builder-result" class="builder-result card" hidden aria-live="polite"></section></section>`;
   const grid = main.querySelector<HTMLElement>('#builder-grid')!;
   const error = main.querySelector<HTMLElement>('#builder-error')!;
   const result = main.querySelector<HTMLElement>('#builder-result')!;
@@ -67,6 +67,7 @@ export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<stri
     graph.picture.style.transformOrigin = 'center center';
     for (const vertex of state.graph.vertices) {
       const node = grid.querySelector<SVGGElement>(`[data-vertex="${vertex.id}"]`)!;
+      node.classList.toggle('node-selected', state.selected === vertex.id);
       node.addEventListener('pointerdown', event => {
         event.stopPropagation();
         const move = (moveEvent: PointerEvent) => {
@@ -100,8 +101,17 @@ export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<stri
     weightLabel.hidden = !weighted.checked;
     weight.disabled = !weighted.checked || !state.selectedEdge;
     if (state.selectedEdge) weight.value = String(state.graph.edges.find(edge => edge.id === state.selectedEdge)?.weight ?? 1);
+    (main.querySelector('#builder-delete')! as HTMLButtonElement).disabled = !state.selected;
   };
   main.querySelector('#builder-add')!.addEventListener('click', () => { const id = String.fromCharCode(65 + state.graph.vertices.length); state.graph.vertices.push({ id, label: id }); state.positions[id] = [230, 125]; render(); });
+  main.querySelector('#builder-delete')!.addEventListener('click', () => {
+    if (!state.selected) return;
+    state.graph.vertices = state.graph.vertices.filter(v => v.id !== state.selected);
+    state.graph.edges = state.graph.edges.filter(edge => edge.from !== state.selected && edge.to !== state.selected);
+    delete state.positions[state.selected];
+    delete state.selected;
+    render();
+  });
   main.querySelector('#builder-clear')!.addEventListener('click', () => {
     pause();
     spatial?.dispose();

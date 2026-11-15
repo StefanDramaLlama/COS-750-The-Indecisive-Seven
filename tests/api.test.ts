@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test, { after } from 'node:test';
 import type { Choice, LessonId, PracticeAction, PracticeResponse, ProgressItem } from '../src/shared/contracts.ts';
-import { lessonsEndpoint, practiceEndpoint, progressEndpoint, runsEndpoint } from '../src/server/http.ts';
+import { lessonsEndpoint, practiceEndpoint, progressEndpoint, quizEndpoint, runsEndpoint } from '../src/server/http.ts';
 import { getLesson, lessonIds } from '../src/server/lessons/catalog.ts';
-import { openLocalDatabase } from '../src/server/progress.ts';
+import { openLocalDatabase, saveProgress, sessionCookie } from '../src/server/progress.ts';
+import { quizQuestions } from '../src/server/quiz-bank.ts';
 
 const directory = mkdtempSync(join(tmpdir(), 'graphwise-test-'));
 process.env.SQLITE_PATH = join(directory, 'test.sqlite');
@@ -28,9 +30,10 @@ const submit = (id: LessonId, action: PracticeAction, history: Choice[] = [], co
     action, version, acceptedChoices: history
   }, cookie));
 
-test('public routes list six lessons, validate inputs, and keep practice traces private', async () => {
+test('public routes list catalogue lessons, validate inputs, and keep practice traces private', async () => {
   const lessonList = await (await lessonsEndpoint(request('/api/lessons'))).json();
   assert.equal(lessonList.length, lessonIds.length);
+  assert.ok(lessonList.every((lesson: { id: string }) => lesson.id !== 'review' && lesson.id !== 'quiz'));
   assert.equal((await lessonsEndpoint(request('/api/lessons?id=missing'))).status, 404);
   assert.equal((await lessonsEndpoint(request('/api/lessons', {}))).status, 405);
   assert.equal((await runsEndpoint(request('/api/runs', {}))).status, 400);
@@ -38,6 +41,55 @@ test('public routes list six lessons, validate inputs, and keep practice traces 
   const response = await runsEndpoint(request('/api/runs', { lessonId: 'dijkstra', exampleId: 'unreachable' }));
   assert.equal(response.status, 200);
   assert.equal((await response.json()).result.kind, 'unreachable');
+});
+
+test('quiz withholds answers until a complete submission and grades only the 42 choices', async () => {
+  const learner = randomUUID();
+  const cookie = sessionCookie(learner, request('/api/quiz')).split(';')[0];
+  for (const id of lessonIds) await saveProgress(learner, id, getLesson(id).version, true);
+
+  const list = await quizEndpoint(request('/api/quiz', undefined, cookie));
+  assert.equal(list.status, 200);
+  assert.equal(list.headers.get('Cache-Control'), 'no-store');
+  const questions = await list.json();
+  assert.equal(questions.length, 48);
+  assert.equal(questions.filter((question: {kind: string}) => question.kind === 'written').length, 6);
+  assert.ok(questions.every((question: object) => !('answer' in question || 'explanation' in question || 'modelAnswer' in question)));
+
+  const answers = Object.fromEntries(quizQuestions.map(question => [question.id,
+    question.kind === 'choice' ? question.answer : 'A written response to compare after submitting.'
+  ]));
+  assert.equal((await quizEndpoint(request('/api/quiz', { answers: {} }, cookie))).status, 400);
+  assert.equal((await quizEndpoint(request('/api/quiz', { answers: { ...answers, 43: '   ' } }, cookie))).status, 400);
+  assert.equal((await quizEndpoint(request('/api/quiz', { answers: { ...answers, 1: 'invalid' } }, cookie))).status, 400);
+
+  const graded = await quizEndpoint(request('/api/quiz', { answers: { ...answers, 1: 'B' } }, cookie));
+  assert.equal(graded.status, 200);
+  const result = await graded.json();
+  assert.equal(result.correct, 41);
+  assert.equal(result.total, 42);
+  assert.equal(result.feedback[0].correct, false);
+  assert.equal(result.feedback[0].answer, 'A');
+  assert.equal(result.feedback.filter((item: { modelAnswer?: string }) => item.modelAnswer).length, 6);
+});
+
+test('quiz unlocks only when the same learner completes every current Studio lesson', async () => {
+  const learner = randomUUID();
+  const cookie = sessionCookie(learner, request('/api/quiz')).split(';')[0];
+  const last = lessonIds.at(-1)!;
+  const version = getLesson(last).version;
+  for (const id of lessonIds.slice(0, -1)) await saveProgress(learner, id, getLesson(id).version, true);
+  await saveProgress(learner, last, version - 1, true);
+  await saveProgress(learner, last, version, false);
+
+  const locked = await quizEndpoint(request('/api/quiz', undefined, cookie));
+  assert.equal(locked.status, 403);
+  assert.equal((await locked.json()).error.code, 'QUIZ_LOCKED');
+  assert.equal((await quizEndpoint(request('/api/quiz', { answers: {} }, cookie))).status, 403);
+
+  await saveProgress(learner, last, version, true);
+  assert.equal((await quizEndpoint(request('/api/quiz', undefined, cookie))).status, 200);
+  assert.equal((await quizEndpoint(request('/api/quiz'))).status, 403);
 });
 
 test('practice validates replay and saves completion once per learner and lesson version', async () => {

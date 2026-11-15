@@ -159,7 +159,7 @@ const content: Record<LessonId, LessonContent> = {
   },
   compare: {
     version: 1,
-    name: 'Choose an algorithm', category: 'Beyond efficiency · BFS or Dijkstra',
+    name: 'BFS vs. Dijkstra', category: 'Shortest-path comparison',
     title: 'Pick the algorithm that fits the data.',
     summary: 'Run BFS and Dijkstra on the same graph and see what, besides speed, decides between them.',
     prerequisites: 'The BFS and Dijkstra lessons', complexity: 'BFS O(V + E) with a queue · Dijkstra O(V² + E) with a distance table',
@@ -175,7 +175,7 @@ const content: Record<LessonId, LessonContent> = {
   },
   'compare-trees': {
     version: 1,
-    name: 'Choose a spanning-tree algorithm', category: 'Beyond efficiency · Kruskal or Prim',
+    name: 'Kruskal vs. Prim', category: 'Minimum spanning tree comparison',
     title: 'Same cost, so other factors decide.',
     summary: 'Run Kruskal and Prim on the same graph and see what, besides speed, decides between them.',
     prerequisites: 'The Kruskal and Prim lessons', complexity: 'Kruskal O(E log E) with a sort · Prim O(V²) with an array',
