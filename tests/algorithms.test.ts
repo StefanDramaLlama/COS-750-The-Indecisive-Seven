@@ -17,7 +17,9 @@ const worked: Record<LessonId, RunResult> = {
   dfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'] },
   'topological-sort': { kind: 'ordering', order: ['A', 'B', 'C', 'D', 'E'] },
   kruskal: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
-  prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 }
+  prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
+  compare: { kind: 'path', vertices: ['A', 'B', 'C', 'D'], edges: ['A-B', 'B-C', 'C-D'], cost: 6 },
+  'compare-trees': { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
 };
 
 for (const id of lessonIds) {

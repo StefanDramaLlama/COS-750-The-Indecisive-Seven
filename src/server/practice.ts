@@ -140,6 +140,46 @@ export const checkpoints: Record<LessonId, Checkpoint[]> = {
       hint: 'Read the running cost and add the remaining frontier edge C–D, whose weight is zero.',
       correct: 'The total is 1 + 2 + 0 = 3. The free link becomes eligible once C is in the tree.'
     }
+  ],
+  compare: [
+    {
+      prompt: { id: 'bfs-route', question: 'Which route does BFS return from A to D?', options: options(['AD', 'A → D'], ['ACD', 'A → C → D'], ['ABD', 'A → B → D']), reviewLineId: 'bfs' },
+      at: at('open'), accepts: oneAnswer('AD'),
+      hint: 'BFS counts hops and ignores the minutes on each path. Which route uses the fewest paths?',
+      correct: 'A → D is a single hop, so BFS returns it, even though it takes 9 minutes.'
+    },
+    {
+      prompt: { id: 'dijkstra-route', question: 'Which route does Dijkstra return?', options: options(['AD', 'A → D'], ['ACD', 'A → C → D'], ['ABD', 'A → B → D']), reviewLineId: 'dijkstra' },
+      at: at('bfs'), accepts: oneAnswer('ACD'),
+      hint: 'Add up the minutes along each route and pick the smallest total.',
+      correct: 'A → C → D takes 1 + 1 = 2 minutes, the lowest total.'
+    },
+    {
+      prompt: { id: 'choose', question: 'A friendship network has no weights. Which algorithm should an app use to count degrees of separation?', options: options(['bfs', 'BFS: same route, simpler code'], ['dijkstra', 'Dijkstra: it works on more graphs'], ['big-o', 'Either: only Big-O matters']), reviewLineId: 'equal' },
+      at: beforeFinish, accepts: oneAnswer('bfs'),
+      hint: 'Without weights, the cheapest route is the one with the fewest hops. Which algorithm finds that with less code?',
+      correct: 'BFS. Without weights both return the same route, and BFS needs only a queue, so it is quicker to write and easier to maintain.'
+    }
+  ],
+  'compare-trees': [
+    {
+      prompt: { id: 'same-cost', question: 'Will Kruskal’s tree and Prim’s tree cost the same?', options: options(['same', 'Yes: both always find the lowest total cost'], ['kruskal', 'No: Kruskal’s sorted list finds a cheaper tree'], ['start', 'Only if Prim starts at the right site']), reviewLineId: 'same' },
+      at: at('open'), accepts: oneAnswer('same'),
+      hint: 'Both algorithms return a minimum spanning tree. Can one spanning tree cost less than the minimum?',
+      correct: 'Yes. Both always return a minimum spanning tree, whichever site Prim starts from. Here both trees cost 6.'
+    },
+    {
+      prompt: { id: 'trenches', question: 'A council lists 40 possible fibre trenches between homes, each with a cost. Which algorithm fits that input?', options: options(['kruskal', 'Kruskal: it works straight from the list'], ['prim', 'Prim: it grows from one site'], ['either', 'Either: the trees cost the same']), reviewLineId: 'factors' },
+      at: at('prim'), accepts: oneAnswer('kruskal'),
+      hint: 'The input is already a list of links with costs. Which algorithm starts by sorting such a list?',
+      correct: 'Kruskal. It sorts the council’s list by cost and skips any trench that would close a loop, so it works from the data as given.'
+    },
+    {
+      prompt: { id: 'existing-code', question: 'Your code already has Dijkstra’s priority queue. Which algorithm needs less new code?', options: options(['prim', 'Prim: it is almost the same as Dijkstra'], ['kruskal', 'Kruskal: it only needs a sort'], ['big-o', 'Either: only Big-O matters']), reviewLineId: 'prim' },
+      at: at('same'), accepts: oneAnswer('prim'),
+      hint: 'Prim and Dijkstra both grow from a start and take the cheapest next site from a priority queue. What would Kruskal need that the code does not have?',
+      correct: 'Prim. It is Dijkstra with one change: the priority is the cost of the link itself, not the distance from the start. Kruskal would need a sort and a structure to track joined groups.'
+    }
   ]
 };
 

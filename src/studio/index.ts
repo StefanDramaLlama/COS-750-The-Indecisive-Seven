@@ -1,5 +1,6 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
 import { button, element, enhanceSelect, required } from './dom.ts';
+import { createComparison } from './compare.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
 import { mountBuilder } from './builder.ts';
@@ -41,6 +42,7 @@ let selection: string | undefined;
 let canvas: { key: string; graph: ReturnType<typeof createGraph> } | undefined;
 let spatialCanvas: { key: string; graph: ReturnType<typeof createGraph> } | undefined;
 let spatialScene: { key: string; graph: ReturnType<typeof createSpatialGraph> } | undefined;
+let comparison: ReturnType<typeof createComparison> | undefined;
 let request: AbortController | undefined;
 let progressRequest = 0;
 let busy = false;
@@ -244,6 +246,7 @@ function setupMobileCollapsibles() {
   addMobileCollapse(ui.q('.code-card'), 'pseudocode');
   addMobileCollapse(ui.q('.practice'), 'practice');
   addMobileCollapse(ui.q('.spatial-section'), '3D graph');
+  if (comparison) addMobileCollapse(ui.q('.compare-card'), 'side by side');
 }
 
 function renderBullets(host: HTMLElement, text: string, className?: string) {
@@ -319,6 +322,7 @@ function renderFrame(announce: boolean) {
   }
   renderControls();
   renderPractice();
+  comparison?.update(view === 'walkthrough' ? walkthrough : undefined);
   setupMobileCollapsibles();
   renderNotice();
 }
@@ -663,6 +667,7 @@ async function applyRoute(focus = false) {
     request = undefined;
     lesson = definition;
     ui = mountLesson(main, definition, lessons);
+    comparison = definition.id === 'compare' || definition.id === 'compare-trees' ? createComparison(ui.q('.graph-column'), definition.id) : undefined;
     currentVariant = definition.variants?.[0].id;
     rebuildPseudocode(definition);
     document.title = `${definition.name} · Graphwise`;
