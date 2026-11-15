@@ -19,6 +19,7 @@ const worked: Record<LessonId, RunResult> = {
   kruskal: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
   prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
   compare: { kind: 'path', vertices: ['A', 'B', 'C', 'D'], edges: ['A-B', 'B-C', 'C-D'], cost: 6 },
+  'compare-trees': { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
 };
 
 for (const id of lessonIds) {

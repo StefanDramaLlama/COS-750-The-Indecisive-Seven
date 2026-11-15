@@ -6,13 +6,14 @@ import { kruskal, prim } from './spanning.ts';
 import { topological } from './topological.ts';
 import { bfs, dfs } from './traversal.ts';
 import { compare } from './compare.ts';
+import { compareTrees } from './compare-trees.ts';
 
 type Runner = (example: Example, choice?: VertexId) => { frames: TraceFrame[]; result: RunResult };
 
 const runners: Record<LessonId, Runner> = {
   basics, dijkstra, bfs, dfs,
   'topological-sort': topological,
-  kruskal, prim, compare
+  kruskal, prim, compare, 'compare-trees': compareTrees
 };
 
 export function runExample(

@@ -34,6 +34,8 @@ const brokenLinks = makeGraph(abcd, [['A', 'B', 1], ['A', 'C', 3], ['B', 'C', 2]
 const square: Positions = { A: [70, 190], B: [120, 60], C: [340, 60], D: [390, 190] };
 const detour = makeGraph(abcd, [['A', 'B', 2], ['B', 'C', 2], ['C', 'D', 2], ['A', 'D', 10]]);
 const shortcut = makeGraph(abcd, [['A', 'B', 4], ['A', 'C', 1], ['B', 'D', 4], ['C', 'D', 1], ['A', 'D', 9]]);
+const hub: Positions = { A: [230, 150], B: [80, 205], C: [230, 40], D: [380, 205] };
+const anyToAny = makeGraph(abcd, [['A', 'B', 2], ['A', 'C', 3], ['A', 'D', 5], ['B', 'C', 4], ['B', 'D', 6], ['C', 'D', 1]]);
 const basicsGraph = makeGraph({ A: 'A', B: 'B', C: 'C' }, [['A', 'B', 4], ['B', 'C']], true);
 const basicsPositions: Positions = { A: [90, 125], B: [230, 125], C: [370, 125] };
 
@@ -78,6 +80,10 @@ export const examples = {
   compare: [
     example('detour', 'walkthrough', 'The direct road or the detour', 'Find a route from A to D. The direct road costs 10; the detour through B and C costs 2 per road.', detour, square, 'A', 'D'),
     example('campus-paths', 'practice', 'Campus paths', 'Walk from A to D. Each number is a walking time in minutes. Predict what each algorithm returns, then choose one for a network without weights.', shortcut, diamond, 'A', 'D')
+  ],
+  'compare-trees': [
+    example('site-links', 'walkthrough', 'Two trees for four sites', 'Connect all four sites for the lowest cost. Kruskal and Prim run on the same links, and Prim starts at A.', links(3, 4), mst, 'A'),
+    example('any-building', 'practice', 'Any building to any other', 'Each of four buildings can link to every other one, and each number is the cost of a link. Prim starts at A. Predict how the two trees compare, then choose an algorithm for each case.', anyToAny, hub, 'A')
   ]
 };
 

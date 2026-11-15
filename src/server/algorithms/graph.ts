@@ -23,7 +23,7 @@ export function validateGraph(graph: Graph, lesson: LessonId, start?: VertexId, 
   }
   const edgeIds = new Set<EdgeId>();
   const pairs = new Set<string>();
-  const weighted = ['dijkstra', 'prim', 'kruskal', 'compare'].includes(lesson);
+  const weighted = ['dijkstra', 'prim', 'kruskal', 'compare', 'compare-trees'].includes(lesson);
   for (const edge of graph.edges) {
     if (!edge || !validId(edge.id) || edgeIds.has(edge.id) || !ids.has(edge.from) || !ids.has(edge.to) || edge.from === edge.to) {
       throw new GraphInputError('Each edge needs a unique ID and two distinct existing endpoints.');
@@ -40,8 +40,8 @@ export function validateGraph(graph: Graph, lesson: LessonId, start?: VertexId, 
     if (lesson === 'bfs' && edge.weight !== undefined) throw new GraphInputError('Use an unweighted graph to find the fewest hops with BFS.');
   }
   if (lesson === 'topological-sort' && !graph.directed) throw new GraphInputError('Topological sorting requires directed edges.');
-  if ((lesson === 'prim' || lesson === 'kruskal') && graph.directed) throw new GraphInputError('Use an undirected graph for the spanning tree lesson.');
-  if (['dijkstra', 'bfs', 'dfs', 'prim', 'compare'].includes(lesson) && (start === undefined || !ids.has(start))) {
+  if ((lesson === 'prim' || lesson === 'kruskal' || lesson === 'compare-trees') && graph.directed) throw new GraphInputError('Use an undirected graph for the spanning tree lesson.');
+  if (['dijkstra', 'bfs', 'dfs', 'prim', 'compare', 'compare-trees'].includes(lesson) && (start === undefined || !ids.has(start))) {
     throw new GraphInputError('Select an existing start vertex.');
   }
   if ((goal !== undefined && !ids.has(goal)) || ((lesson === 'dijkstra' || lesson === 'compare') && goal === undefined)) {
