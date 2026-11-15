@@ -246,7 +246,7 @@ export class TutorPanel {
       "button",
       { type: "button", class: "tutor-fab", "aria-expanded": "false", "aria-controls": "tutor-panel", "aria-label": "Ask the study helper about this page" },
       ICON.chat(),
-      h("span", {}, "Ask about this page"),
+      h("span", {}, "Chat with Graphwise"),
     );
     this.fab.addEventListener("click", () => this.toggle());
 
@@ -283,7 +283,7 @@ export class TutorPanel {
       h(
         "header",
         { class: "tutor__head" },
-        h("div", {}, h("p", { class: "tutor-label" }, "Study helper · AI"), h("h2", { id: "tutor-title" }, "Ask about this page")),
+        h("div", {}, h("p", { class: "tutor-label" }, "Study helper · AI"), h("h2", { id: "tutor-title" }, "Chat with Graphwise")),
         h("div", { class: "tutor__head-actions" }, reset, close),
       ),
       this.contextLine,
