@@ -108,7 +108,10 @@ export function chunkForSpeech(text: string, max = 900): string[] {
 class Speaker {
   private audio = new Audio();
   private abort: AbortController | null = null;
-  private cache = new Map<string, string>();
+  /** In-flight or finished audio per chunk, so a click reuses a prefetch already under way. */
+  private cache = new Map<string, Promise<string>>();
+  /** Lifetime of audio fetches; only a chat reset cancels them (stopping playback does not). */
+  private fetchCtrl = new AbortController();
   private playingId: number | null = null;
   private onState: (id: number, state: "idle" | "loading" | "playing", note?: string) => void;
 
@@ -131,19 +134,38 @@ class Speaker {
   }
 
   clearCache() {
-    for (const url of this.cache.values()) URL.revokeObjectURL(url);
+    this.fetchCtrl.abort();
+    this.fetchCtrl = new AbortController();
+    for (const p of this.cache.values()) p.then((url) => URL.revokeObjectURL(url), () => {});
     this.cache.clear();
   }
 
-  private async fetchChunk(text: string, signal: AbortSignal): Promise<string> {
+  private fetchChunk(text: string): Promise<string> {
     const hit = this.cache.get(text);
     if (hit) return hit;
-    const { data, mimeType } = await this.post<{ data: string; mimeType: string }>("/api/tts", signal, { text });
-    signal.throwIfAborted();
-    const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
-    this.cache.set(text, url);
-    return url;
+    const signal = this.fetchCtrl.signal;
+    const p = this.post<{ data: string; mimeType: string }>("/api/tts", signal, { text }).then(({ data, mimeType }) => {
+      signal.throwIfAborted();
+      const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+      return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+    });
+    // Forget failures so a later click can retry.
+    p.catch(() => {
+      if (this.cache.get(text) === p) this.cache.delete(text);
+    });
+    this.cache.set(text, p);
+    return p;
+  }
+
+  /** Generate the audio for an answer in the background, as soon as the answer arrives. */
+  async prefetch(text: string) {
+    for (const chunk of chunkForSpeech(text)) {
+      try {
+        await this.fetchChunk(chunk);
+      } catch {
+        return; // speak() retries and falls back to the browser voice if needed
+      }
+    }
   }
 
   private playUrl(url: string, signal: AbortSignal): Promise<void> {
@@ -183,12 +205,13 @@ class Speaker {
     this.onState(id, "loading");
     const chunks = chunkForSpeech(text);
     try {
-      let next = this.fetchChunk(chunks[0], ctrl.signal);
+      let next = this.fetchChunk(chunks[0]);
       for (let i = 0; i < chunks.length; i++) {
         const url = await next;
-        // Prefetch the following chunk while this one plays.
+        ctrl.signal.throwIfAborted();
+        // Prefetch the following chunk while this one plays (no-op if already cached).
         if (i + 1 < chunks.length) {
-          next = this.fetchChunk(chunks[i + 1], ctrl.signal);
+          next = this.fetchChunk(chunks[i + 1]);
           next.catch(() => {});
         }
         this.onState(id, "playing");
@@ -375,6 +398,8 @@ export class TutorPanel {
       const { reply } = await this.post<{ reply: string }>("/api/tutor", ctrl.signal, payload);
       if (ctrl.signal.aborted) return;
       this.entries.push({ id: this.nextId++, role: "model", text: reply, variant });
+      // Start generating the voice now so "Listen" plays without waiting.
+      void this.speaker.prefetch(reply);
     } catch (err) {
       if (ctrl.signal.aborted) return;
       this.entries.push({ id: this.nextId++, role: "model", text: (err as Error).message, error: true });
