@@ -2,14 +2,13 @@ import { randomUUID } from 'node:crypto';
 import type { Choice, Example, Graph, LessonId, Positions, PracticeAction } from '../shared/contracts.ts';
 import { GraphInputError } from './algorithms/graph.ts';
 import { runExample } from './algorithms/index.ts';
+import { RequestError } from './errors.ts';
 import { getLesson, getLessons, isLessonId } from './lessons/catalog.ts';
 import { examples } from './lessons/fixtures.ts';
 import { practice, PracticeError } from './practice.ts';
 import { learnerId, readProgress, saveProgress, sessionCookie } from './progress.ts';
+import { askTutor, parseTtsRequest, parseTutorRequest, speak } from './tutor.ts';
 
-class RequestError extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) { super(message); }
-}
 const invalid = (message: string) => new RequestError(400, 'INVALID_REQUEST', message);
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const validText = (value: unknown): value is string => typeof value === 'string' && value.length > 0 && value.length <= 64;
@@ -40,11 +39,13 @@ function failure(status: number, code: string, message: string): Response {
   return Response.json({ error: { code, message } }, { status, headers: { 'Cache-Control': 'no-store' } });
 }
 
-async function body(request: Request): Promise<Record<string, unknown>> {
+export const tutorBodyLimit = 128 * 1024;
+
+async function body(request: Request, limit = 16_384): Promise<Record<string, unknown>> {
   let value: unknown;
   try {
     const raw = await request.text();
-    if (raw.length > 16_384) throw new Error('Body too large');
+    if (raw.length > limit) throw new Error('Body too large');
     value = JSON.parse(raw);
   } catch {
     throw invalid('Send a valid JSON request.');
@@ -128,4 +129,16 @@ export const practiceEndpoint = endpoint('POST', async request => {
 export const progressEndpoint = endpoint('GET', async request => {
   const id = learnerId(request);
   return Response.json(id ? await readProgress(id) : [], { headers: { 'Cache-Control': 'no-store' } });
+});
+
+const noStore = { headers: { 'Cache-Control': 'no-store' } };
+
+export const tutorEndpoint = endpoint('POST', async request => {
+  const question = parseTutorRequest(await body(request, tutorBodyLimit));
+  return Response.json(await askTutor(question), noStore);
+});
+
+export const ttsEndpoint = endpoint('POST', async request => {
+  const { text } = parseTtsRequest(await body(request));
+  return Response.json(await speak(text), noStore);
 });

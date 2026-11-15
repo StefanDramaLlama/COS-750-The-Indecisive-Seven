@@ -5,6 +5,7 @@ import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
 import { mountBuilder } from './builder.ts';
 import { renderState } from './state.ts';
+import { captureScreen, TutorPanel } from './tutor.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
 
@@ -30,6 +31,9 @@ const announcement = required(document, '#announcement');
 const theme = required<HTMLSelectElement>(document, '#theme');
 const accent = required<HTMLSelectElement>(document, '#accent');
 const clock = required<HTMLTimeElement>(document, '#clock');
+const tutor = new TutorPanel(captureScreen, json);
+
+new MutationObserver(() => tutor.refreshContext()).observe(main, { childList: true, subtree: true, characterData: true });
 
 let lessons: LessonSummary[] = [];
 let progress: ProgressItem[] = [];

@@ -128,3 +128,16 @@ export interface ProgressItem {
   startedAt: string;
   completedAt: string | null;
 }
+export type TutorMode = "answer" | "simpler" | "deeper";
+
+export interface TutorMessage {
+  role: "user" | "model";
+  text: string;
+}
+
+export interface TutorRequest {
+  mode: TutorMode;
+  /** Text captured from the learner's screen. */
+  context: string;
+  messages: TutorMessage[];
+}
