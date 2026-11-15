@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "npm run build && npm start",
-    "start": "node --env-file-if-exists=.env.local .build/scripts/serve.js",
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local .build/scripts/serve.js",
     "check": "npm run build && node --test .build/tests/*.test.js",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.ts"
   },

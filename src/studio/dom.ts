@@ -129,3 +129,46 @@ export function enhanceSelect(select: HTMLSelectElement): DropdownController {
   refresh();
   return controller;
 }
+type Attrs = Record<string, string | number | boolean | null | undefined>;
+type Child = Node | string | number | null | undefined | false | Child[];
+
+function apply(el: Element, attrs: Attrs) {
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === null || v === undefined || v === false) continue;
+    el.setAttribute(k, v === true ? "" : String(v));
+  }
+}
+
+function append(el: Element, children: Child[]) {
+  for (const c of children) {
+    if (c === null || c === undefined || c === false) continue;
+    if (Array.isArray(c)) append(el, c);
+    else el.append(c instanceof Node ? c : String(c));
+  }
+}
+
+/** Create an HTML element: h("p", {class: "x"}, "text"). */
+export function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  attrs: Attrs = {},
+  ...children: Child[]
+): HTMLElementTagNameMap[K] {
+  const el = element(tag);
+  apply(el, attrs);
+  append(el, children);
+  return el;
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Create an SVG element. */
+export function s<K extends keyof SVGElementTagNameMap>(
+  tag: K,
+  attrs: Attrs = {},
+  ...children: Child[]
+): SVGElementTagNameMap[K] {
+  const el = document.createElementNS(SVG_NS, tag);
+  apply(el, attrs);
+  append(el, children);
+  return el;
+}

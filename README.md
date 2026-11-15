@@ -44,6 +44,12 @@ Open `/builder` for the Graph Builder. Add vertices to the grid, drag them into 
 - The same handlers serve the local HTTP server and Vercel. `GET /api/lessons` returns the catalog, `POST /api/runs` returns a worked trace, `POST /api/practice` checks decisions and reveals steps, and `GET /api/progress` returns progress for the current session.
 - `db/migrations` versions the shared SQLite schema. The server uses local SQLite for development and a hosted libSQL connection when configured for Vercel.
 
+## AI study helper
+
+Set `GOOGLE_AI_STUDIO_API_KEY` in the Git-ignored `.env` or `.env.local` file, then restart the dev server. On a hosted instance, set the same variable in the server environment. See `.env.example` for optional Gemini model and voice settings.
+
+Open **Ask about this page** to ask a question about the visible lesson step. The helper sends the question, recent conversation, and visible lesson context to Gemini through `/api/tutor`. Answers can be simplified, expanded, or read aloud. The Listen action uses `/api/tts` and falls back to the browser voice when the AI voice is unavailable. The API key stays on the server.
+
 ## Vercel setup for later
 
 1. Import the GitHub repository with the repository root as the Vercel project root. `vercel.json` selects the Other preset, builds the static frontend into `dist`, and keeps lesson deep links and API routes separate.
