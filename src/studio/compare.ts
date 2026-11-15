@@ -24,7 +24,7 @@ export function createComparison(column: HTMLElement) {
       <div class="state-item"><h3>Trade-off</h3><p>BFS needs fewer lines of code and only a plain queue. Dijkstra adds a priority queue and distance updates. Result: with weights on, only Dijkstra’s route is sure to be the cheapest.</p></div>
       <div class="state-item"><h3>Practical factors</h3><p>Input patterns come first: different weights rule BFS out. When both are correct, programming time and maintainability favour BFS, and existing, tested code can tip the choice.</p></div>
     </div>`;
-  column.append(card);
+  required(column, '#state-panel').before(card);
   const caption = required(card, '#compare-caption');
   const sides = Array.from(card.querySelectorAll<HTMLElement>('.compare-graphs > div'), side => {
     const [route, totals] = side.querySelectorAll('p');

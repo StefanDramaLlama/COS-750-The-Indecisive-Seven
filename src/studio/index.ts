@@ -245,6 +245,7 @@ function setupMobileCollapsibles() {
   addMobileCollapse(ui.q('.code-card'), 'pseudocode');
   addMobileCollapse(ui.q('.practice'), 'practice');
   addMobileCollapse(ui.q('.spatial-section'), '3D graph');
+  if (comparison) addMobileCollapse(ui.q('.compare-card'), 'side by side');
 }
 
 function renderFrame(announce: boolean) {
