@@ -617,7 +617,7 @@ async function applyRoute(focus = false) {
     request = undefined;
     lesson = definition;
     ui = mountLesson(main, definition, lessons);
-    comparison = definition.id === 'compare' ? createComparison(ui.q('.graph-column')) : undefined;
+    comparison = definition.id === 'compare' || definition.id === 'compare-trees' ? createComparison(ui.q('.graph-column'), definition.id) : undefined;
     document.title = `${definition.name} · Graphwise`;
     guideLink.hidden = false;
     bindLesson();
