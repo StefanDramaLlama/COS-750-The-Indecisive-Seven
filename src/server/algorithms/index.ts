@@ -11,7 +11,8 @@ type Runner = (example: Example, choice?: VertexId) => { frames: TraceFrame[]; r
 const runners: Record<LessonId, Runner> = {
   basics, dijkstra, bfs, dfs,
   'topological-sort': topological,
-  kruskal, prim
+  kruskal, prim,
+  review: dijkstra
 };
 
 export function runExample(

@@ -34,6 +34,12 @@ const brokenLinks = makeGraph(abcd, [['A', 'B', 1], ['A', 'C', 3], ['B', 'C', 2]
 const basicsGraph = makeGraph({ A: 'A', B: 'B', C: 'C' }, [['A', 'B', 4], ['B', 'C']], true);
 const basicsPositions: Positions = { A: [90, 125], B: [230, 125], C: [370, 125] };
 
+const reviewLabels = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E' };
+const reviewGraph = makeGraph(reviewLabels, [
+  ['A', 'B', 2], ['A', 'C', 4], ['B', 'C', 1], ['B', 'D', 5], ['C', 'D', 2], ['C', 'E', 3], ['D', 'E', 1]
+]);
+const reviewPositions: Positions = { A: [60, 125], B: [190, 54], C: [190, 196], D: [340, 54], E: [470, 125] };
+
 export const examples = {
 
   basics: [
@@ -71,6 +77,14 @@ export const examples = {
     example('site-links', 'walkthrough', 'Grow from one site', 'Start from A and grow a low-cost network, one link at a time.', links(3, 4), mst, 'A'),
     example('isolated-site', 'walkthrough', 'An isolated site', 'Start from A on a network with no link to D. Watch what happens when the frontier runs out.', brokenLinks, mst, 'A'),
     example('cheaper-outside-link', 'practice', 'The free link is farther away', 'C–D now costs 0. Starting at A, choose the first link and work out the completed tree’s cost.', links(3, 0), mst, 'A')
+  ],
+  review: [
+    example('weighted-route', 'walkthrough', 'A weighted route', 'Dijkstra finds the lowest-cost route from A to E across five sites.', reviewGraph, reviewPositions, 'A', 'E'),
+    example('weighted-route-practice', 'practice', 'Algorithm review', 'A randomized set of questions spanning all seven algorithm lessons.', reviewGraph, reviewPositions, 'A', 'E')
+  ],
+  quiz: [
+    example('quiz-graph', 'walkthrough', 'Quiz graph', 'A weighted graph used for quiz questions across all algorithm lessons.', reviewGraph, reviewPositions, 'A', 'E'),
+    example('quiz-practice', 'practice', 'Algorithm quiz', 'Open quiz questions spanning every lesson. No prerequisites.', reviewGraph, reviewPositions, 'A', 'E')
   ]
 };
 

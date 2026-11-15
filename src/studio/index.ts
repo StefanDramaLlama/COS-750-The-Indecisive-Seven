@@ -126,6 +126,11 @@ function renderProgress() {
   if (lesson && ui) ui.q('#saved').hidden = !progress.some(item => item.lessonId === lesson?.id && item.version === lesson.version && item.completedAt);
 }
 
+function reviewUnlocked(): boolean {
+  const required = ['basics', 'dijkstra', 'bfs', 'dfs', 'topological-sort', 'kruskal', 'prim'];
+  return required.every(id => progress.some(item => item.lessonId === id && item.completedAt));
+}
+
 async function refreshProgress() {
   const sequence = ++progressRequest;
   try {
@@ -602,20 +607,27 @@ function rebuildPseudocode(lesson: Lesson) {
   const variant = lesson.variants?.find(v => v.id === (currentVariant ?? lesson.variants?.[0].id));
   const code = variant?.code ?? lesson.code;
   const host = ui.q('#code-lines');
+  const explanation = ui.q('#line-explanation');
+  const buttons = ui.codeButtons;
   host.replaceChildren();
-  ui.codeButtons.clear();
+  buttons.clear();
+  let inspected: string | undefined;
+  const resetExplanation = () => { explanation.textContent = 'Select a line to see why it is used.'; };
+  resetExplanation();
   for (const [index, line] of code.entries()) {
     const node = button('', () => {
-      // …existing click handler, copied from mountLesson…
+      inspected = inspected === line.id ? undefined : line.id;
+      for (const [id, item] of buttons) item.setAttribute('aria-pressed', String(id === inspected));
+      if (inspected) explanation.textContent = line.explanation;
+      else resetExplanation();
     }, 'code-line');
     node.setAttribute('aria-pressed', 'false');
     const number = element('span', String(index + 1).padStart(2, '0'), 'line-number');
     number.setAttribute('aria-hidden', 'true');
     node.append(number, element('code', line.text));
-    ui.codeButtons.set(line.id, node);
+    buttons.set(line.id, node);
     host.append(node);
   }
-  ui.q('#line-explanation').textContent = 'Select a line to see why it is used.';
 }
 
 async function applyRoute(focus = false) {
@@ -651,6 +663,17 @@ async function applyRoute(focus = false) {
   if (!id || !lessons.some(item => item.id === id)) {
     document.title = 'Graphwise · Algorithm Studio';
     renderOverview(main, lessons, Boolean(id));
+    if (focus) main.focus({ preventScroll: true });
+    return;
+  }
+  if (id === 'review' && !reviewUnlocked()) {
+    document.title = 'Graphwise · Algorithm Studio';
+    renderOverview(main, lessons, true);
+    const notice = required(document, '#notice');
+    const message = required(notice, 'p');
+    notice.hidden = false;
+    message.textContent = 'Complete all seven algorithm lessons before taking the review.';
+    required<HTMLButtonElement>(notice, 'button').hidden = true;
     if (focus) main.focus({ preventScroll: true });
     return;
   }

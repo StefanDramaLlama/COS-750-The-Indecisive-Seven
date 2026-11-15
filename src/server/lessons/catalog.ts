@@ -156,6 +156,48 @@ const content: Record<LessonId, LessonContent> = {
       line('add', '  if a crossing edge exists: add the cheapest edge and its outside vertex', 'The cheapest crossing edge grows the tree by one vertex and cannot form a cycle. Equal costs use edge ID.'),
       line('finish', 'return the tree, or the partial tree when no crossing edge exists', 'A partial tree covers only the component of the selected start.')
     ]
+  },
+  review: {
+    version: 1,
+    name: 'Algorithm Review',
+    category: 'Review · all algorithms',
+    title: 'Randomized questions across every lesson.',
+    summary: 'A mixed quiz spanning graph basics, Dijkstra, BFS, DFS, topological sort, Kruskal, and Prim.',
+    prerequisites: 'Complete the six algorithm lessons first',
+    complexity: 'Mixed review — no new algorithm',
+    objectives: [
+      'Identify which algorithm fits a given problem.',
+      'Trace estimates, queues, stacks, components, and dependency orders across algorithms.'
+    ],
+    primers: [],
+    code: [
+      line('initialize', 'distance = ∞ for every vertex; distance[start] = 0', 'Start with zero cost at the source and no known routes to the other vertices.'),
+      line('settle', 'u = unsettled vertex with smallest distance; settle u', 'Choose the smallest estimate. All edge weights are nonnegative, so this estimate is final.'),
+      line('consider', 'for each unsettled neighbor v of u: candidate = distance[u] + weight(u, v)', 'Try reaching the neighbor by extending the route to u by one edge.'),
+      line('relax', 'if candidate < distance[v]: update distance[v] and predecessor[v]', 'Keep the new estimate and edge only if the candidate improves the current estimate.'),
+      line('finish', 'return the predecessor path or report unreachable', 'Follow predecessor edges backwards from the goal. An infinite goal distance means no route was found.')
+    ]
+  },
+  quiz: {
+    version: 1,
+    name: 'Algorithm Quiz',
+    category: 'Quiz · open to all',
+    title: 'Open quiz questions on every algorithm.',
+    summary: 'Practice questions spanning graph basics, Dijkstra, BFS, DFS, topological sort, Kruskal, and Prim. No prerequisites — open to anyone.',
+    prerequisites: 'None — open to all learners',
+    complexity: 'Mixed quiz — no new algorithm',
+    objectives: [
+      'Identify which algorithm fits a given problem.',
+      'Apply graph concepts across all seven lessons.'
+    ],
+    primers: [],
+    code: [
+      line('initialize', 'distance = ∞ for every vertex; distance[start] = 0', 'Start with zero cost at the source and no known routes to the other vertices.'),
+      line('settle', 'u = unsettled vertex with smallest distance; settle u', 'Choose the smallest estimate. All edge weights are nonnegative, so this estimate is final.'),
+      line('consider', 'for each unsettled neighbor v of u: candidate = distance[u] + weight(u, v)', 'Try reaching the neighbor by extending the route to u by one edge.'),
+      line('relax', 'if candidate < distance[v]: update distance[v] and predecessor[v]', 'Keep the new estimate and edge only if the candidate improves the current estimate.'),
+      line('finish', 'return the predecessor path or report unreachable', 'Follow predecessor edges backwards from the goal. An infinite goal distance means no route was found.')
+    ]
   }
 };
 

@@ -28,9 +28,9 @@ const submit = (id: LessonId, action: PracticeAction, history: Choice[] = [], co
     action, version, acceptedChoices: history
   }, cookie));
 
-test('public routes list six lessons, validate inputs, and keep practice traces private', async () => {
+test('public routes list eight lessons, validate inputs, and keep practice traces private', async () => {
   const lessonList = await (await lessonsEndpoint(request('/api/lessons'))).json();
-  assert.equal(lessonList.length, 6);
+  assert.equal(lessonList.length, 8);
   assert.equal((await lessonsEndpoint(request('/api/lessons?id=missing'))).status, 404);
   assert.equal((await lessonsEndpoint(request('/api/lessons', {}))).status, 405);
   assert.equal((await runsEndpoint(request('/api/runs', {}))).status, 400);

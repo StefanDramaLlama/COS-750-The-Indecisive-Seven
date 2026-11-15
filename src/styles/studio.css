@@ -16,12 +16,12 @@
   --green-soft: #e2f3e9;
   --button: #5d56c9;
   --button-text: #ffffff;
-  --code: #f5f5fc;
-  --code-raised: #ececf8;
+  --code: #e7e8f0;
+  --code-raised: #dcdde8;
   --code-text: #252642;
   --code-muted: #666981;
-  --code-line: #d3d5e5;
-  --code-active: #ebeaff;
+  --code-line: #c4c6d6;
+  --code-active: #dbe0f0;
   --code-cyan: #5d56c9;
   --shadow: 0 18px 44px #4d54851a;
   --glass-shadow: 0 12px 30px #4d54851a;
@@ -50,7 +50,7 @@
     --raised: #2b2e4d; --text: #f6f5ff; --muted: #c0c2d7; --line: #424665; --strong-line: #9296b3;
     --cyan: #aaa5ff; --cyan-soft: #34365e; --cyan-border: #6666a3;
     --green: #8bdcaf; --green-soft: #1e4939; --button: #8e87f5; --button-text: #17172a;
-    --code: #20233e; --code-raised: #2b2e4d; --code-text: #f6f5ff; --code-muted: #c5c6e2; --code-line: #4a4e74; --code-active: #3b3e68; --code-cyan: #b5b1ff;
+--code: #191a2c; --code-raised: #22253c; --code-text: #f6f5ff; --code-muted: #c5c6e2; --code-line: #3d4059; --code-active: #2c2f46; --code-cyan: #b5b1ff;
     --shadow: 0 12px 28px #07081466;
     --glass: #252946e6; --glass-soft: #343858cc; --glass-highlight: #424665; --scenario: #34365ed9; --background-accent: #625bd94d;
     --spatial-bg: #20233e; --spatial-grid: #8e87f533; --spatial-line: #aaa5ff; --spatial-node: #f6f5ff;
@@ -66,7 +66,7 @@
   --raised: #2b2e4d; --text: #f6f5ff; --muted: #c0c2d7; --line: #424665; --strong-line: #9296b3;
   --cyan: #aaa5ff; --cyan-soft: #34365e; --cyan-border: #6666a3;
   --green: #8bdcaf; --green-soft: #1e4939; --button: #8e87f5; --button-text: #17172a;
-  --code: #20233e; --code-raised: #2b2e4d; --code-text: #f6f5ff; --code-muted: #c5c6e2; --code-line: #4a4e74; --code-active: #3b3e68; --code-cyan: #b5b1ff;
+  --code: #191a2c; --code-raised: #22253c; --code-text: #f6f5ff; --code-muted: #c5c6e2; --code-line: #3d4059; --code-active: #2c2f46; --code-cyan: #b5b1ff;
   --shadow: 0 12px 28px #07081466;
   --glass: #252946e6; --glass-soft: #343858cc; --glass-highlight: #424665; --scenario: #34365ed9; --background-accent: #625bd94d;
   --spatial-bg: #20233e; --spatial-grid: #8e87f533; --spatial-line: #aaa5ff; --spatial-node: #f6f5ff;
@@ -223,6 +223,8 @@ h1 { margin-top: 5px; max-width: 760px; color: var(--text); font-family: Georgia
 .node-complete .node-disc { fill: var(--green-soft); stroke: var(--green); }
 .node-active .node-disc { stroke: var(--cyan); stroke-width: 2.7; }
 .node-active .node-halo { stroke: var(--cyan); stroke-dasharray: 3 2; }
+.node-selected .node-disc { stroke: var(--button); stroke-width: 3; }
+.node-selected .node-halo { stroke: var(--button); stroke-dasharray: 3 2; }
 .node-result .node-halo { stroke: var(--green); }
 .legend { display: flex; flex-wrap: wrap; gap: 5px 13px; padding: 11px 15px 13px; margin: 0; list-style: none; color: var(--muted); font-size: 11px; }
 .legend li { display: flex; gap: 6px; align-items: center; }
