@@ -16,6 +16,17 @@ export function routeLink(text: string, href: string, className?: string) {
   return link;
 }
 
+export function graphBasicsTabs(active: 'basics' | 'foundations', foundationPath = '/graph-adt/undirected') {
+  const nav = element('nav', undefined, 'basics-tabs');
+  nav.setAttribute('aria-label', 'Graph basics sections');
+  const basics = routeLink('Basics', lessonUrl('basics'));
+  const foundations = element('a', 'Foundations');
+  foundations.href = foundationPath;
+  (active === 'basics' ? basics : foundations).setAttribute('aria-current', 'page');
+  nav.append(basics, foundations);
+  return nav;
+}
+
 function options(select: HTMLSelectElement, entries: { id: string; name: string }[]) {
   select.replaceChildren(...entries.map(({ id, name }) => new Option(name, id)));
 }
@@ -136,6 +147,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
       </details>
     </div>`;
   const q = <T extends HTMLElement>(selector: string) => required<T>(main, selector);
+  if (lesson.id === 'basics') q('.viewbar').before(graphBasicsTabs('basics'));
   const comparing = isComparison(lesson.id);
   const courseId = comparing ? comparisonsId : lesson.id;
   const number = lessons.findIndex(item => item.id === courseId) + 1;

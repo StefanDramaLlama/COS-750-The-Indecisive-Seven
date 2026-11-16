@@ -1,4 +1,8 @@
+import type { LessonSummary, ProgressItem } from '../shared/contracts.ts';
+import { listCourseLessons, renderCourseNav } from '../studio/course-nav.ts';
 import { enhanceSelect, required } from '../studio/dom.ts';
+import { mountTheme } from '../studio/theme.ts';
+import { graphBasicsTabs } from '../studio/view.ts';
 import { buildCode } from './code.ts';
 import type { Representation } from './code.ts';
 import { COMPARISON, CONTENT, opDocs } from './content.ts';
@@ -15,20 +19,13 @@ import { LABELS, MAX_WEIGHT, MIN_WEIGHT } from './types.ts';
 
 const theme = required<HTMLSelectElement>(document, '#theme');
 const accent = required<HTMLSelectElement>(document, '#accent');
-function setTheme(value: string) {
-  if (value === 'light' || value === 'dark') document.documentElement.dataset.theme = value;
-  else delete document.documentElement.dataset.theme;
-  theme.value = value === 'light' || value === 'dark' ? value : 'system';
-}
+mountTheme(theme);
 function setAccent(value: string) {
   document.documentElement.dataset.accent = ['violet', 'ocean', 'mint', 'sunset'].includes(value) ? value : 'violet';
   accent.value = document.documentElement.dataset.accent;
 }
-try { setTheme(localStorage.getItem('graphwise-theme') ?? 'system'); } catch { setTheme('system'); }
 try { setAccent(localStorage.getItem('graphwise-accent') ?? 'violet'); } catch { setAccent('violet'); }
-enhanceSelect(theme);
 enhanceSelect(accent);
-theme.addEventListener('change', () => { setTheme(theme.value); try { localStorage.setItem('graphwise-theme', theme.value); } catch { /* Applies for this visit. */ } });
 accent.addEventListener('change', () => { setAccent(accent.value); try { localStorage.setItem('graphwise-accent', accent.value); } catch { /* Applies for this visit. */ } });
 
 const clock = required<HTMLTimeElement>(document, '#clock');
@@ -50,11 +47,18 @@ const kind: GraphKind = (match?.[1] as GraphKind | undefined) ?? 'undirected';
 if (!match) history.replaceState(null, '', `/graph-adt/${kind}`);
 const content = CONTENT[kind];
 const config = CONFIGS[kind];
-document.title = `${content.name} · Graph Foundations · Graphwise`;
-document.querySelectorAll<HTMLElement>('[data-kind-link]').forEach(link => {
-  if (link.dataset.kindLink === kind) link.setAttribute('aria-current', 'page');
-});
-required(document, '.breadcrumb strong').textContent = content.name;
+document.title = `${content.name} · Graph basics · Graphwise`;
+
+async function loadCourseNavigation() {
+  const [catalogue, progress] = await Promise.allSettled([
+    fetch('/api/lessons').then(async response => response.ok ? await response.json() as LessonSummary[] : undefined),
+    fetch('/api/progress').then(async response => response.ok ? await response.json() as ProgressItem[] : undefined)
+  ]);
+  if (catalogue.status !== 'fulfilled' || !catalogue.value) return;
+  const lessons = catalogue.value;
+  renderCourseNav(lessons, listCourseLessons(lessons), progress.status === 'fulfilled' ? progress.value ?? [] : [], 'basics');
+}
+void loadCourseNavigation();
 
 const main = required(document, '#main');
 const announcement = required(document, '#announcement');
@@ -90,10 +94,11 @@ const allKinds: { kind: GraphKind; label: string }[] = [
 
 main.innerHTML = `
 <header class="adt-hero">
-  <p class="eyebrow">GRAPH FOUNDATIONS / GRAPH ADT</p>
-  <h1>${content.name}</h1>
-  <p class="lede">${content.headline}</p>
+  <p class="eyebrow">ALGORITHM STUDIO / FOUNDATIONS</p>
+  <h1>Graph basics</h1>
   <nav class="kind-tabs" aria-label="Graph types">${allKinds.map(k => `<a href="/graph-adt/${k.kind}" ${k.kind === kind ? 'aria-current="page"' : ''}>${k.label}</a>`).join('')}</nav>
+  <h2 class="foundation-title">${content.name}</h2>
+  <p class="lede">${content.headline}</p>
   <div class="hero-grid">
     <section class="card pad" aria-labelledby="outcome-h">
       <h2 id="outcome-h">What you will be able to do</h2>
@@ -192,6 +197,8 @@ main.innerHTML = `
   <div class="card code-card"><div class="code-bar"><span id="code-title"></span><button type="button" class="btn small" id="copy-code">Copy</button></div><pre class="code" tabindex="0"><code id="code-full"></code></pre></div>
   <p class="muted small">Other graph types: ${content.siblings.map(s => `<a href="/graph-adt/${s.kind}">${s.label}</a>`).join(' · ')}.</p>
 </section>`;
+
+required(main, '.kind-tabs').before(graphBasicsTabs('foundations', `/graph-adt/${kind}`));
 
 /* ---------- Static figures (definition + representations) ---------- */
 

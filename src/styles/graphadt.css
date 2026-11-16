@@ -1,13 +1,15 @@
 /* Graph ADT pages. Builds on the tokens and shell in studio.css. */
 .adt-hero { margin-bottom: 36px; }
-.adt-hero h1 { margin: 6px 0 8px; }
-.lede { max-width: 700px; color: var(--muted); font-size: 17px; }
+.adt-hero h1 { margin: 5px 0 19px; }
+.foundation-title { font-size: clamp(23px, 3vw, 34px); letter-spacing: -.03em; line-height: 1.15; }
+.lede { max-width: 700px; margin: 6px 0 18px; color: var(--muted); font-size: 17px; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
 .pad { padding: 18px 20px; }
 .card h2, .card h3 { font-size: 16px; letter-spacing: -.015em; }
 .card h3 { margin-bottom: 8px; }
 .kind-tabs, .jump, .lab-tabs, .rep-toggle { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+.kind-tabs { margin-top: 0; }
 .kind-tabs a, .jump a, .tab { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass-soft); color: var(--text); font-size: 13px; font-weight: 650; text-decoration: none; backdrop-filter: blur(12px); }
 .kind-tabs a[aria-current], .tab[aria-pressed="true"] { background: var(--button); color: var(--button-text); border-color: var(--button); }
 .kind-tabs a:hover, .jump a:hover, .tab:hover { border-color: var(--cyan); }
