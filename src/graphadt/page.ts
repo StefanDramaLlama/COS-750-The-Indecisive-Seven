@@ -50,7 +50,7 @@ const kind: GraphKind = (match?.[1] as GraphKind | undefined) ?? 'undirected';
 if (!match) history.replaceState(null, '', `/graph-adt/${kind}`);
 const content = CONTENT[kind];
 const config = CONFIGS[kind];
-document.title = `Graphwise · Graph ADT · ${content.name}`;
+document.title = `${content.name} · Graph Foundations · Graphwise`;
 document.querySelectorAll<HTMLElement>('[data-kind-link]').forEach(link => {
   if (link.dataset.kindLink === kind) link.setAttribute('aria-current', 'page');
 });
@@ -90,7 +90,7 @@ const allKinds: { kind: GraphKind; label: string }[] = [
 
 main.innerHTML = `
 <header class="adt-hero">
-  <p class="eyebrow">GRAPH ADT / ${content.name.toUpperCase()}</p>
+  <p class="eyebrow">GRAPH FOUNDATIONS / GRAPH ADT</p>
   <h1>${content.name}</h1>
   <p class="lede">${content.headline}</p>
   <nav class="kind-tabs" aria-label="Graph types">${allKinds.map(k => `<a href="/graph-adt/${k.kind}" ${k.kind === kind ? 'aria-current="page"' : ''}>${k.label}</a>`).join('')}</nav>

@@ -1,4 +1,4 @@
-export type LessonId = 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim';
+export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'compare' | 'compare-trees';
 export type VertexId = string;
 export type EdgeId = string;
 
@@ -36,7 +36,11 @@ export interface Primer {
   positions: Positions;
   takeaway: string;
 }
-
+export interface CodeVariant {
+  id: string;            
+  label: string;          
+  code: CodeLine[];
+}
 export interface Lesson extends LessonSummary {
   title: string;
   summary: string;
@@ -45,7 +49,8 @@ export interface Lesson extends LessonSummary {
   objectives: [string, string];
   code: CodeLine[];
   examples: ExampleDescriptor[];
-  primers: Primer[];
+  primers: Primer[];       
+  variants?: CodeVariant[];     
 }
 
 type Distances = Record<VertexId, number | null>;
@@ -123,3 +128,36 @@ export interface ProgressItem {
   startedAt: string;
   completedAt: string | null;
 }
+export type TutorMode = "answer" | "simpler" | "deeper";
+
+export interface TutorMessage {
+  role: "user" | "model";
+  text: string;
+}
+
+export interface TutorRequest {
+  mode: TutorMode;
+  /** Text captured from the learner's screen. */
+  context: string;
+  messages: TutorMessage[];
+}
+
+export const QUIZ_WRITTEN_LIMIT = 1000;
+
+export type QuizQuestion = {
+  id: number;
+  topic: string;
+  prompt: string;
+} & (
+  | { kind: 'choice'; options: { id: string; text: string }[] }
+  | { kind: 'written' }
+);
+
+export type QuizResult = {
+  correct: number;
+  total: number;
+  feedback: (
+    | { id: number; kind: 'choice'; correct: boolean; answer: string; explanation: string }
+    | { id: number; kind: 'written'; modelAnswer: string }
+  )[];
+};

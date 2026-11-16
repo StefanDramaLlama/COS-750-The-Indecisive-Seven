@@ -31,8 +31,24 @@ const dependencies: Link[] = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['C', 'D'], ['
 const project = makeGraph(taskLabels, dependencies, true);
 const links = (ac: number, cd: number) => makeGraph(abcd, [['A', 'B', 1], ['B', 'C', 2], ['A', 'C', ac], ['C', 'D', cd]]);
 const brokenLinks = makeGraph(abcd, [['A', 'B', 1], ['A', 'C', 3], ['B', 'C', 2]]);
+const square: Positions = { A: [70, 190], B: [120, 60], C: [340, 60], D: [390, 190] };
+const detour = makeGraph(abcd, [['A', 'B', 2], ['B', 'C', 2], ['C', 'D', 2], ['A', 'D', 10]]);
+const shortcut = makeGraph(abcd, [['A', 'B', 4], ['A', 'C', 1], ['B', 'D', 4], ['C', 'D', 1], ['A', 'D', 9]]);
+const hub: Positions = { A: [230, 150], B: [80, 205], C: [230, 40], D: [380, 205] };
+const anyToAny = makeGraph(abcd, [['A', 'B', 2], ['A', 'C', 3], ['A', 'D', 5], ['B', 'C', 4], ['B', 'D', 6], ['C', 'D', 1]]);
+const basicsGraph = makeGraph({ A: 'A', B: 'B', C: 'C' }, [['A', 'B', 4], ['B', 'C']], true);
+const basicsPositions: Positions = { A: [90, 125], B: [230, 125], C: [370, 125] };
 
 export const examples = {
+
+  basics: [
+    example('labelled-graph', 'walkthrough', 'A small labelled graph',
+      'Read the picture before the words: three dots, two lines, one number.',
+      basicsGraph, basicsPositions),
+    example('labelled-graph-practice', 'practice', 'Name the parts',
+      'Answer three questions about the picture before the algorithm lessons begin.',
+      basicsGraph, basicsPositions)
+  ],
   dijkstra: [
     example('weighted-diamond', 'walkthrough', 'The weighted diamond', 'Find the lowest-cost delivery route from A to D. Each edge label is its delivery cost.', routes(10), diamond, 'A', 'D'),
     example('unreachable', 'walkthrough', 'An unreachable destination', 'Roads reach B and C from A. D is isolated. Follow the estimates until the search runs out of reachable vertices.', makeGraph(abcd, [['A', 'B', 5], ['A', 'C', 2]]), diamond, 'A', 'D'),
@@ -60,6 +76,14 @@ export const examples = {
     example('site-links', 'walkthrough', 'Grow from one site', 'Start from A and grow a low-cost network, one link at a time.', links(3, 4), mst, 'A'),
     example('isolated-site', 'walkthrough', 'An isolated site', 'Start from A on a network with no link to D. Watch what happens when the frontier runs out.', brokenLinks, mst, 'A'),
     example('cheaper-outside-link', 'practice', 'The free link is farther away', 'C–D now costs 0. Starting at A, choose the first link and work out the completed tree’s cost.', links(3, 0), mst, 'A')
+  ],
+  compare: [
+    example('detour', 'walkthrough', 'The direct road or the detour', 'Find a route from A to D. The direct road costs 10; the detour through B and C costs 2 per road.', detour, square, 'A', 'D'),
+    example('campus-paths', 'practice', 'Campus paths', 'Walk from A to D. Each number is a walking time in minutes. Predict what each algorithm returns, then choose one for a network without weights.', shortcut, diamond, 'A', 'D')
+  ],
+  'compare-trees': [
+    example('site-links', 'walkthrough', 'Two trees for four sites', 'Connect all four sites for the lowest cost. Kruskal and Prim run on the same links, and Prim starts at A.', links(3, 4), mst, 'A'),
+    example('any-building', 'practice', 'Any building to any other', 'Each of four buildings can link to every other one, and each number is the cost of a link. Prim starts at A. Predict how the two trees compare, then choose an algorithm for each case.', anyToAny, hub, 'A')
   ]
 };
 

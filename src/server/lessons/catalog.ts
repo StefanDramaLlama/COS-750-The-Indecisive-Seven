@@ -5,6 +5,30 @@ const line = (id: string, text: string, explanation: string): CodeLine => ({ id,
 type LessonContent = Omit<Lesson, 'id' | 'examples'>;
 
 const content: Record<LessonId, LessonContent> = {
+  basics: {
+    version: 1,
+    name: 'Graph basics',
+    category: 'Foundations · nodes, edges, direction',
+    title: 'Start here: nodes and edges.',
+    summary: 'Learn the vocabulary every other lesson assumes.',
+    prerequisites: 'No prior graph knowledge',
+    complexity: 'Concepts only — not an algorithm',
+    objectives: [
+      'Read a graph as nodes connected by edges — and identify each part.',
+      'Recognise directed, weighted, connected, and cyclic graphs from small examples.'
+    ],
+    primers: [primers.direction, primers.cycles, primers.connectivity, primers.weights],
+    code: [
+      line('graph', 'A graph is a set of nodes joined by edges.',
+        'A graph is exactly that: nodes, and edges joining them. Everything else builds on those two sets.'),
+      line('node', 'A node (vertex) is one item in the graph.',
+        'A node has a label. When drawn, it also has a position. A graph with three nodes has three vertices.'),
+      line('edge', 'An edge (link) joins two nodes.',
+        'An edge connects a pair of nodes. An arrowhead makes it directed; a number makes it weighted.'),
+      line('finish', 'Every algorithm in this studio works on a graph like this one.',
+        'The rest of the lessons turn these ideas into procedures.')
+    ]
+  },
   dijkstra: {
     version: 1,
     name: 'Dijkstra', category: 'Weighted shortest path',
@@ -66,7 +90,41 @@ const content: Record<LessonId, LessonContent> = {
       line('place', 'while ready is nonempty: remove a ready vertex u and append it to order', 'Any ready vertex can go next. Choosing a different one can produce another valid ordering.'),
       line('release', '  for each outgoing neighbor v: decrement indegree[v]; enqueue v when it reaches 0', 'Placing u satisfies one prerequisite of each outgoing neighbor.'),
       line('finish', 'return order if all vertices were placed; otherwise report a cycle', 'A cycle leaves some prerequisites unresolved and can also block tasks downstream.')
-    ]
+    ],
+    variants: [
+    {
+      id: 'iterative',
+      label: 'Iterative',
+      code: [
+        line('count',   'indegree = count incoming edges; ready = vertices with indegree 0',
+          'Incoming edges represent prerequisites still to be placed.'),
+        line('place',   'while ready is nonempty: remove a ready vertex u and append it to order',
+          'Any ready vertex can go next. Choosing a different one can produce another valid ordering.'),
+        line('release', '  for each outgoing neighbor v: decrement indegree[v]; enqueue v when it reaches 0',
+          'Placing u satisfies one prerequisite of each outgoing neighbor.'),
+        line('finish',  'return order if all vertices were placed; otherwise report a cycle',
+          'A cycle leaves some prerequisites unresolved and can also block tasks downstream.')
+      ]
+    },
+    {
+      id: 'recursive',
+      label: 'Recursive',
+      code: [
+        line('enter',      'visit(u): mark u visiting; explore its outgoing edges',
+          'A vertex stays on the recursion stack until every successor is visited.'),
+        line('cycle',      'if a successor is still on the stack: report a cycle',
+          'A back-edge means a prerequisite chain leads back to its own start. No topological order exists.'),
+        line('skip',       'if a successor is already finished: skip it',
+          'Re-visiting a finished vertex would duplicate it in the output.'),
+        line('descend',    'follow the edge to an unvisited successor',
+          'The order of appends is "last to finish first."'),
+        line('finish-one', 'after all successors: mark u finished, append u to postorder',
+          'This is the "post" part of postorder: a vertex is appended only after its descendants.'),
+        line('finish',     'return the reverse of the postorder as the ordering',
+          'Reversing puts each prerequisite before the tasks that need it.')
+      ]
+    }
+  ]
   },
   kruskal: {
     version: 1,
@@ -97,6 +155,38 @@ const content: Record<LessonId, LessonContent> = {
       line('frontier', 'while some vertices are outside: find the edges with one endpoint in tree', 'Only edges crossing the boundary can expand the current tree.'),
       line('add', '  if a crossing edge exists: add the cheapest edge and its outside vertex', 'The cheapest crossing edge grows the tree by one vertex and cannot form a cycle. Equal costs use edge ID.'),
       line('finish', 'return the tree, or the partial tree when no crossing edge exists', 'A partial tree covers only the component of the selected start.')
+    ]
+  },
+  compare: {
+    version: 1,
+    name: 'BFS vs. Dijkstra', category: 'Shortest-path comparison',
+    title: 'Pick the algorithm that fits the data.',
+    summary: 'Run BFS and Dijkstra on the same graph and see what, besides speed, decides between them.',
+    prerequisites: 'The BFS and Dijkstra lessons', complexity: 'BFS O(V + E) with a queue · Dijkstra O(V² + E) with a distance table',
+    objectives: ['Explain why edge weights decide whether BFS or Dijkstra finds the right route.', 'Justify choosing the simpler algorithm when both give the same answer.'],
+    primers: [primers.weights],
+    code: [
+      line('bfs', 'bfs(graph, start): count hops with a plain queue', 'BFS ignores the weights: every edge counts as one hop.'),
+      line('dijkstra', 'dijkstra(graph, start): add up weights with a priority queue', 'Dijkstra needs a priority queue and distance updates, so it is more code to write and test.'),
+      line('weights', 'if the edges have different weights: use dijkstra', 'The route with the fewest hops is not always the cheapest, so BFS can return the wrong route.'),
+      line('equal', 'else: bfs and dijkstra return the same route', 'With no weights, or equal weights, the cheapest route is the one with the fewest hops.'),
+      line('finish', '  same route: choose the code that is simpler to write and maintain', 'When both are correct, programming time and maintainability decide.')
+    ]
+  },
+  'compare-trees': {
+    version: 1,
+    name: 'Kruskal vs. Prim', category: 'Minimum spanning tree comparison',
+    title: 'Same cost, so other factors decide.',
+    summary: 'Run Kruskal and Prim on the same graph and see what, besides speed, decides between them.',
+    prerequisites: 'The Kruskal and Prim lessons', complexity: 'Kruskal O(E log E) with a sort · Prim O(V²) with an array',
+    objectives: ['Explain why Kruskal and Prim always build trees with the same total cost.', 'Justify choosing Kruskal or Prim from the input format and the code already written.'],
+    primers: [primers.cycles],
+    code: [
+      line('kruskal', 'kruskal(graph): sort the links by cost, skip any that close a loop', 'Kruskal works from a list of links. It needs the list sorted and a structure that tracks which sites are already joined.'),
+      line('prim', 'prim(graph, start): grow one tree by the cheapest link to a new site', 'Prim is almost the same algorithm as Dijkstra: only the priority changes. On a simple array it needs no priority queue and no structure for tracking joined groups.'),
+      line('same', 'both trees have the same total cost', 'Both return a minimum spanning tree. When two links cost the same the trees can differ, but the total cannot.'),
+      line('factors', 'if the input is a list of links: kruskal; if any site can link to any other: prim', 'Kruskal sorts the list it is given. When every site can link to every other, Prim on an array is less code.'),
+      line('finish', 'same cost: choose the code that fits the input and the code you already have', 'When both are correct, the input format, programming time and existing code decide.')
     ]
   }
 };

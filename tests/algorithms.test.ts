@@ -11,12 +11,15 @@ function run(id: LessonId, exampleId?: string) {
 }
 
 const worked: Record<LessonId, RunResult> = {
+  basics: { kind: 'traversal', order: ['A', 'B', 'C'] },
   dijkstra: { kind: 'path', vertices: ['A', 'B', 'D'], edges: ['A-B', 'B-D'], cost: 7 },
   bfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'], path: ['A', 'B', 'D'], hops: 2 },
   dfs: { kind: 'traversal', order: ['A', 'B', 'C', 'D'] },
   'topological-sort': { kind: 'ordering', order: ['A', 'B', 'C', 'D', 'E'] },
   kruskal: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
-  prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 }
+  prim: { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
+  compare: { kind: 'path', vertices: ['A', 'B', 'C', 'D'], edges: ['A-B', 'B-C', 'C-D'], cost: 6 },
+  'compare-trees': { kind: 'tree', edges: ['A-B', 'B-C', 'C-D'], weight: 7 },
 };
 
 for (const id of lessonIds) {
@@ -100,4 +103,10 @@ test('spanning tree runners select connected acyclic edges and explain disconnec
   }
   assert.equal(run('kruskal', 'forest').result.kind, 'disconnected');
   assert.deepEqual(run('prim', 'isolated-site').result, { kind: 'disconnected', edges: ['A-B', 'B-C'], weight: 3, covered: ['A', 'B', 'C'] });
+});
+
+test('topological sort DFS variant returns a valid ordering', () => {
+  const example = examples['topological-sort'][0];
+  const run = runExample('topological-sort', 1, example, undefined, 'dfs');
+  assert.deepEqual(run.result, { kind: 'ordering', order: ['A', 'B', 'C', 'D', 'E'] });
 });

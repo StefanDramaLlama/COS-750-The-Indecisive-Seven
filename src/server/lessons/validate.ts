@@ -1,5 +1,5 @@
 import { runExample } from '../algorithms/index.ts';
-import { validatePractice } from '../practice.ts';
+import { validatePractice, checkpoints } from '../practice.ts';
 import { getLesson, lessonIds } from './catalog.ts';
 import { examples } from './fixtures.ts';
 
@@ -7,8 +7,13 @@ for (const id of lessonIds) {
   const lesson = getLesson(id);
   const lineIds = new Set(lesson.code.map(line => line.id));
   if (lineIds.size !== lesson.code.length) throw new Error(`Duplicate pseudocode ID for ${id}`);
-  if (!lesson.examples.some(example => example.kind === 'walkthrough') || !lesson.examples.some(example => example.kind === 'practice')) {
-    throw new Error(`Missing walkthrough or practice for ${id}`);
+  if (!lesson.examples.some(example => example.kind === 'walkthrough')){ 
+    throw new Error(`Missing walkthrough for ${id}`);
+  }
+  const hasPracticeExample = lesson.examples.some(example => example.kind === 'practice');
+  const hasCheckpoints = (checkpoints[id]?.length ?? 0) > 0;
+  if (hasPracticeExample !== hasCheckpoints) {
+    throw new Error(`Practice example and checkpoints must agree for ${id}`);
   }
   if (new Set(lesson.examples.map(example => example.id)).size !== lesson.examples.length) {
     throw new Error(`Duplicate example ID for ${id}`);

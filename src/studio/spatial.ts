@@ -82,6 +82,7 @@ function themeColor(name: string, fallback: [number, number, number]) {
 }
 
 export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: Positions) {
+  const builderMode = host.classList.contains('builder-spatial');
   const canvas = document.createElement('canvas');
   canvas.className = 'webgl-spatial-canvas';
   canvas.setAttribute('aria-label', 'Interactive three-dimensional graph. Scroll to move through algorithm steps.');
@@ -227,7 +228,9 @@ export function createSpatialGraph(host: HTMLElement, graph: Graph, positions: P
       const label = labelNodes.get(id)!;
       const position = project(point, projection, view);
       label.hidden = !position.visible;
-      label.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -145%)`;
+      label.style.transform = builderMode
+        ? `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`
+        : `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -145%)`;
       label.style.opacity = String(Math.max(0.35, Math.min(1, 0.72 + (point.z + 2) * 0.07)));
     });
     graph.edges.forEach(edge => {

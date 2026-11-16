@@ -7,6 +7,7 @@
   "rewrites": [
     { "source": "/algorithms", "destination": "/index.html" },
     { "source": "/algorithms/:lessonId", "destination": "/index.html" },
+    { "source": "/builder", "destination": "/index.html" },
     { "source": "/graph-adt", "destination": "/graph-adt.html" },
     { "source": "/graph-adt/:kind", "destination": "/graph-adt.html" }
   ]

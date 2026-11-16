@@ -1,4 +1,5 @@
 import type { Lesson, LessonSummary, Primer } from '../shared/contracts.ts';
+import { comparisonPairs, comparisonsId, isComparison } from './compare.ts';
 import { button, element, enhanceSelect, required } from './dom.ts';
 import { createGraph } from './graph.ts';
 
@@ -57,7 +58,12 @@ export function renderOverview(main: HTMLElement, lessons: LessonSummary[], miss
 export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSummary[]) {
   main.innerHTML = `
     <div class="lesson-head">
-      <div><p id="lesson-eyebrow" class="eyebrow"></p><h1 id="lesson-title"></h1><p id="lesson-summary"></p></div>
+      <div>
+        <p id="lesson-eyebrow" class="eyebrow"></p>
+        <h1 id="lesson-title"></h1>
+        <p id="lesson-subtitle" class="lesson-subtitle" hidden></p>
+        <p id="lesson-summary"></p>
+      </div>
       <label class="lesson-picker"><span>LESSON</span><span class="select-box"><select id="lesson-select"></select></span></label>
     </div>
     <div class="viewbar">
@@ -130,21 +136,54 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
       </details>
     </div>`;
   const q = <T extends HTMLElement>(selector: string) => required<T>(main, selector);
-  const number = lessons.findIndex(item => item.id === lesson.id) + 1;
-  q('#lesson-eyebrow').textContent = `ALGORITHM STUDIO / ${String(number).padStart(2, '0')} · ${lesson.category.toUpperCase()}`;
-  q('#lesson-title').textContent = lesson.title;
-  q('#lesson-summary').textContent = lesson.summary;
+  const comparing = isComparison(lesson.id);
+  const courseId = comparing ? comparisonsId : lesson.id;
+  const number = lessons.findIndex(item => item.id === courseId) + 1;
+  q('#lesson-eyebrow').textContent = `ALGORITHM STUDIO / ${String(number).padStart(2, '0')} · ${comparing ? 'ALGORITHM CHOICE' : lesson.category.toUpperCase()}`;
+  q('#lesson-title').textContent = comparing ? 'Comparisons' : lesson.name;
+  if (!comparing) {
+    const subtitle = q('#lesson-subtitle');
+    subtitle.textContent = lesson.title;
+    subtitle.hidden = false;
+  }
+  q('#lesson-summary').textContent = comparing
+    ? 'Choose a pair to see how the algorithms solve the same problem. Complete both practice exercises to finish the lesson.'
+    : lesson.summary;
   q('#assumption').textContent = lesson.prerequisites;
-  q('#code-title').textContent = lesson.id === 'topological-sort' ? 'Kahn’s algorithm' : lesson.name;
+  q('#code-title').textContent = lesson.name;
   const lessonSelect = q<HTMLSelectElement>('#lesson-select');
   options(lessonSelect, lessons);
-  lessonSelect.value = lesson.id;
+  lessonSelect.value = courseId;
   enhanceSelect(lessonSelect);
+  const pairStatuses = new Map<LessonSummary['id'], HTMLElement>();
+  if (comparing) {
+    const picker = element('nav', undefined, 'comparison-picker');
+    picker.setAttribute('aria-label', 'Choose an algorithm pair');
+    for (const pair of comparisonPairs) {
+      const link = routeLink('', lessonUrl(pair.id), 'comparison-choice');
+      if (pair.id === lesson.id) link.setAttribute('aria-current', 'true');
+      const status = element('span', '✓ Practice complete', 'comparison-status');
+      status.hidden = true;
+      pairStatuses.set(pair.id, status);
+      link.append(element('strong', pair.name), element('span', pair.topic, 'comparison-topic'), status);
+      picker.append(link);
+    }
+    q('.viewbar').before(picker);
+  }
   const tabs = new Map<View, HTMLAnchorElement>();
-  for (const [name, title] of [['walkthrough', 'Walkthrough'], ['pseudocode', 'Pseudocode'], ['practice', 'Practice']] as const) {
+  for (const [name, title] of [['walkthrough', comparing ? 'Side by side' : 'Walkthrough'], ['pseudocode', 'Pseudocode'], ['practice', 'Practice']] as const) {
     const link = routeLink(title, lessonUrl(lesson.id, name));
     q('.views').append(link);
     tabs.set(name, link);
+  }
+
+  if (lesson.variants) {
+    const picker = element('select', undefined, 'variant-select') as HTMLSelectElement;
+    picker.id = 'variant-select';
+    picker.setAttribute('aria-label', 'Algorithm variant');
+    for (const v of lesson.variants) picker.append(new Option(v.label, v.id));
+    picker.value = lesson.variants[0].id;
+    q('#code-title').after(picker);
   }
 
   const code = q('#code-lines');
@@ -178,7 +217,8 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
 
   const exampleSelect = q<HTMLSelectElement>('#example-select');
   return {
-    q, tabs, codeButtons, lessonSelect, exampleSelect,
+    q, tabs, codeButtons, lessonSelect, exampleSelect, pairStatuses,
+    variantSelect: lesson.variants ? q<HTMLSelectElement>('#variant-select') : undefined,
     setExamples(kind: 'walkthrough' | 'practice', id: string) {
       const entries = lesson.examples.filter(example => example.kind === kind);
       options(exampleSelect, entries.map(example => ({ id: example.id, name: example.title })));

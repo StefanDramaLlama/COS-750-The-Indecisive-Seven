@@ -1,6 +1,6 @@
 /* Graph ADT pages. Builds on the tokens and shell in studio.css. */
 .adt-hero { margin-bottom: 36px; }
-.adt-hero h1 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -.035em; line-height: 1.08; margin: 6px 0 8px; }
+.adt-hero h1 { margin: 6px 0 8px; }
 .lede { max-width: 700px; color: var(--muted); font-size: 17px; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
@@ -33,7 +33,7 @@
 .props dt { font-weight: 760; font-size: 14px; }
 .props dd { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
 .figure { margin: 14px 0 0; }
-.figure figcaption, .mini figcaption { margin-top: 8px; color: var(--muted); font: 12px ui-monospace, monospace; overflow-wrap: anywhere; }
+.figure figcaption, .mini figcaption { margin-top: 8px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .figure h3 { margin-bottom: 10px; }
 figure.card { margin: 0; }
 .table-wrap { overflow-x: auto; }
@@ -99,7 +99,7 @@ figure.card { margin: 0; }
 .is-playground .vertex { cursor: pointer; }
 .disc { fill: var(--spatial-node); stroke: var(--spatial-line); stroke-width: 2; transition: fill .2s, stroke .2s; }
 .halo { fill: none; stroke: transparent; stroke-width: 2; }
-.vlabel { fill: var(--spatial-node-text); font: 800 17px 'Avenir Next', 'Trebuchet MS', sans-serif; pointer-events: none; }
+.vlabel { fill: var(--spatial-node-text); font-size: 17px; font-weight: 800; pointer-events: none; }
 .v-changed .disc { fill: var(--green-soft); stroke: var(--green); stroke-width: 3.5; }
 .v-changed .halo { stroke: var(--green); }
 .v-read .disc, .v-frontier .disc { fill: var(--cyan-soft); stroke: var(--cyan); stroke-width: 2.8; }
@@ -110,7 +110,7 @@ figure.card { margin: 0; }
 .v-removing .disc { fill: var(--surface-solid); stroke: var(--spatial-active); stroke-width: 3; stroke-dasharray: 5 4; }
 .v-removing .halo { stroke: var(--spatial-active); stroke-dasharray: 2 4; }
 .v-picked .halo { stroke: var(--cyan); stroke-width: 3; }
-.badge { fill: var(--button); } .badge-text { fill: var(--button-text); font: 800 11px sans-serif; pointer-events: none; }
+.badge { fill: var(--button); } .badge-text { fill: var(--button-text); font-size: 11px; font-weight: 800; pointer-events: none; }
 .rubber { stroke: var(--cyan); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
 .empty-note { fill: var(--muted); font-size: 15px; font-weight: 650; }
 
