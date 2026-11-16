@@ -30,7 +30,7 @@ function endpoint(method: 'GET' | 'POST', handler: (request: Request) => Promise
       if (error instanceof RequestError) return failure(error.status, error.code, error.message);
       if (error instanceof GraphInputError) return failure(422, 'UNSUPPORTED_GRAPH', error.message);
       if (error instanceof PracticeError) return failure(422, 'INVALID_DECISION_HISTORY', error.message);
-      console.error('Algorithm Studio request failed', error instanceof Error ? error.name : 'Unknown error');
+      console.error('practice failed:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : error);
       return failure(500, 'REQUEST_FAILED', 'Algorithm Studio could not complete the request. Try again.');
     }
   };
