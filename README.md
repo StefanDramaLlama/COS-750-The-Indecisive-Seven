@@ -44,6 +44,13 @@ Open `/builder` for the Graph Builder. Add vertices to the grid, drag them into 
 - The same handlers serve the local HTTP server and Vercel. `GET /api/lessons` returns the catalog, `POST /api/runs` returns a worked trace, `POST /api/practice` checks decisions and reveals steps, and `GET /api/progress` returns progress for the current session.
 - `db/migrations` versions the shared SQLite schema. The server uses local SQLite for development and a hosted libSQL connection when configured for Vercel.
 
+## Graph Foundations
+
+Four pages cover the Graph ADT: `/graph-adt/undirected`, `/graph-adt/directed`, `/graph-adt/weighted` and `/graph-adt/weighted-directed`. Each page has a definition and properties section, matrix and list pictures, an Operation lab (guided walkthrough and playground with the graph and its memory side by side, step back and forward, execution log, optional sound cues and read-aloud), an operation reference with before and after pictures, prediction questions, and full TypeScript code for both representations.
+
+- `src/graphadt/engine.ts` turns a graph and a list of operations into frames (the contract is in `types.ts`). `content.ts` holds the copy and walkthrough scripts, `code.ts` the code samples, `quiz.ts` the prediction questions, `sound.ts` the audio cues, `render.ts` and `page.ts` the UI. The page entry is `graph-adt.html`.
+- `tests/graphadt.test.ts` runs the code samples against the engine, so the code shown to learners behaves like the lab.
+
 ## AI study helper
 
 Set `GOOGLE_AI_STUDIO_API_KEY` in the Git-ignored `.env` or `.env.local` file, then restart the dev server. On a hosted instance, set the same variable in the server environment. See `.env.example` for optional Gemini model and voice settings.
