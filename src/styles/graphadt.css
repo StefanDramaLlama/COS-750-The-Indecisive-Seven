@@ -1,6 +1,5 @@
 /* Graph ADT pages. Builds on the tokens and shell in studio.css. */
 .adt-hero { margin-bottom: 36px; }
-.adt-hero h1 { margin: 5px 0 19px; }
 .foundation-title { font-size: clamp(23px, 3vw, 34px); letter-spacing: -.03em; line-height: 1.15; }
 .lede { max-width: 700px; margin: 6px 0 18px; color: var(--muted); font-size: 17px; }
 .muted { color: var(--muted); }

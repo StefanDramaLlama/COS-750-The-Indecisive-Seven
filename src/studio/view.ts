@@ -31,6 +31,12 @@ function options(select: HTMLSelectElement, entries: { id: string; name: string 
   select.replaceChildren(...entries.map(({ id, name }) => new Option(name, id)));
 }
 
+export function setupLessonSelect(select: HTMLSelectElement, lessons: LessonSummary[], active: LessonSummary['id']) {
+  options(select, lessons);
+  select.value = active;
+  enhanceSelect(select).refresh();
+}
+
 function renderPrimer(primer: Primer) {
   const card = element('section', undefined, 'primer');
   const toolbar = element('div', undefined, 'primer-controls');
@@ -164,9 +170,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
   q('#assumption').textContent = lesson.prerequisites;
   q('#code-title').textContent = lesson.name;
   const lessonSelect = q<HTMLSelectElement>('#lesson-select');
-  options(lessonSelect, lessons);
-  lessonSelect.value = courseId;
-  enhanceSelect(lessonSelect);
+  setupLessonSelect(lessonSelect, lessons, courseId);
   const pairStatuses = new Map<LessonSummary['id'], HTMLElement>();
   if (comparing) {
     const picker = element('nav', undefined, 'comparison-picker');

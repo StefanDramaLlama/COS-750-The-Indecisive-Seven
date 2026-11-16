@@ -1,4 +1,5 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
+import { ApiError, json } from './api.ts';
 import { button, element, enhanceSelect, required } from './dom.ts';
 import { comparisonPairs, createComparison, isComparison } from './compare.ts';
 import { listCourseLessons, renderCourseNav } from './course-nav.ts';
@@ -11,19 +12,6 @@ import { mountTheme } from './theme.ts';
 import { captureScreen, TutorPanel } from './tutor.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
-
-class ApiError extends Error {
-  constructor(message: string, readonly status: number) { super(message); }
-}
-
-async function json<T>(path: string, signal?: AbortSignal, body?: unknown): Promise<T> {
-  const response = await fetch(path, { signal, ...(body !== undefined ? {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-  } : {}) });
-  const data = await response.json().catch(() => undefined);
-  if (!response.ok || data === undefined) throw new ApiError(data?.error?.message ?? 'The studio could not load this request.', response.status);
-  return data as T;
-}
 
 const main = required(document, '#main');
 const quizNav = required(document, '#quiz-nav');

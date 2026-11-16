@@ -8,6 +8,7 @@
   <link rel="icon" href="/assets/styles/graphwise.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/styles/studio.css">
   <link rel="stylesheet" href="/assets/styles/graphadt.css">
+  <link rel="stylesheet" href="/assets/styles/tutor.css">
   <script type="module" src="/assets/graphadt/page.js"></script>
 </head>
 <body>
@@ -47,7 +48,7 @@
           <span class="breadcrumb">Algorithm Studio <span>/</span> Graph basics <span>/</span> <strong>Foundations</strong></span>
         </div>
         <div class="top-actions">
-          <a href="/algorithms/dijkstra">Algorithm Studio</a>
+          <a href="#definition">Learning guide</a>
           <time id="clock" class="clock" aria-label="Current date and time"></time>
           <label class="theme-control"><span aria-hidden="true">◐</span><span class="sr-only">Appearance</span>
             <select id="theme">
@@ -62,8 +63,16 @@
         </div>
       </header>
       <main id="main" class="content" tabindex="-1">
-        <p class="eyebrow">ALGORITHM STUDIO / FOUNDATIONS</p>
-        <h1>Graph basics</h1>
+        <div class="lesson-head">
+          <div>
+            <p class="eyebrow">ALGORITHM STUDIO / FOUNDATIONS</p>
+            <h1>Graph basics</h1>
+          </div>
+          <label class="lesson-picker"><span>LESSON</span><span class="select-box"><select id="lesson-select"><option value="basics">Graph basics</option></select></span></label>
+        </div>
+        <nav class="kind-tabs" aria-label="Graph types"></nav>
+        <h2 class="foundation-title"></h2>
+        <div id="foundation-content"></div>
       </main>
     </div>
   </div>
