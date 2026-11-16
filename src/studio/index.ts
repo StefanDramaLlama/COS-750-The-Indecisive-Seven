@@ -692,9 +692,12 @@ async function applyRoute(focus = false) {
     renderProgress();
     updateView();
     if (focus) main.focus({ preventScroll: true });
-  } catch {
-    if (request !== abort) return;
+  } catch (error) {
+    // `request` is cleared once the lesson data arrives, so an error while drawing the lesson still shows here.
+    // Only a newer navigation (a different request) should silence it.
+    if (request !== undefined && request !== abort) return;
     request = undefined;
+    console.error('Lesson failed to load:', error);
     main.replaceChildren(element('h1', 'This lesson couldn’t load.'), button('Try again', () => { void applyRoute(true); }, 'button primary'));
   }
 }

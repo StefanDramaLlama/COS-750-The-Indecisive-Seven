@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test, { after } from 'node:test';
-import type { Choice, LessonId, PracticeAction, PracticeResponse, ProgressItem } from '../src/shared/contracts.ts';
+import { quizRequiresAllLessons, type Choice, type LessonId, type PracticeAction, type PracticeResponse, type ProgressItem } from '../src/shared/contracts.ts';
 import { lessonsEndpoint, practiceEndpoint, progressEndpoint, quizEndpoint, runsEndpoint } from '../src/server/http.ts';
 import { getLesson, lessonIds } from '../src/server/lessons/catalog.ts';
 import { openLocalDatabase, saveProgress, sessionCookie } from '../src/server/progress.ts';
@@ -73,7 +73,11 @@ test('quiz withholds answers until a complete submission and grades only the 42 
   assert.equal(result.feedback.filter((item: { modelAnswer?: string }) => item.modelAnswer).length, 6);
 });
 
-test('quiz unlocks only when the same learner completes every current Studio lesson', async () => {
+test('quiz is open to every learner while the completion gate is off', { skip: quizRequiresAllLessons }, async () => {
+  assert.equal((await quizEndpoint(request('/api/quiz'))).status, 200);
+});
+
+test('quiz unlocks only when the same learner completes every current Studio lesson', { skip: !quizRequiresAllLessons }, async () => {
   const learner = randomUUID();
   const cookie = sessionCookie(learner, request('/api/quiz')).split(';')[0];
   const last = lessonIds.at(-1)!;

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Choice, Example, Graph, LessonId, Positions, PracticeAction } from '../shared/contracts.ts';
+import { quizRequiresAllLessons, type Choice, type Example, type Graph, type LessonId, type Positions, type PracticeAction } from '../shared/contracts.ts';
 import { GraphInputError } from './algorithms/graph.ts';
 import { runExample } from './algorithms/index.ts';
 import { RequestError } from './errors.ts';
@@ -135,6 +135,7 @@ export const progressEndpoint = endpoint('GET', async request => {
 const noStore = { headers: { 'Cache-Control': 'no-store' } };
 
 async function requireQuizAccess(request: Request): Promise<void> {
+  if (!quizRequiresAllLessons) return;
   const id = learnerId(request);
   const progress = id ? await readProgress(id) : [];
   const unlocked = getLessons().every(lesson => progress.some(item =>

@@ -1,4 +1,4 @@
-import type { LessonSummary, ProgressItem } from '../shared/contracts.ts';
+import { quizRequiresAllLessons, type LessonSummary, type ProgressItem } from '../shared/contracts.ts';
 import { comparisonPairs, comparisonsId, isComparison } from './compare.ts';
 import { element, required } from './dom.ts';
 import { lessonUrl, routeLink } from './view.ts';
@@ -25,7 +25,7 @@ export function renderCourseNav(
   const meter = required<HTMLProgressElement>(document, '#course-progress');
   meter.max = courseLessons.length || 8;
   meter.value = courseCompleted;
-  required(document, '#quiz-lock-label').hidden = lessons.length > 0 && completed.size === lessons.length;
+  required(document, '#quiz-lock-label').hidden = !quizRequiresAllLessons || lessons.length > 0 && completed.size === lessons.length;
   required(document, '#progress-count').textContent = `${courseCompleted} of ${meter.max} lessons complete`;
   const activeCourseLesson = isComparison(activeLesson) ? comparisonsId : activeLesson;
   required(document, '#lesson-links').replaceChildren(...courseLessons.map((item, index) => {

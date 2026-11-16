@@ -19,7 +19,7 @@ const initial: BuilderState = {
 export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<string, unknown>) => Promise<Run>) {
   const state: BuilderState = structuredClone(initial);
   let zoom = 1;
-  main.innerHTML = `<section class="builder-page"><p class="eyebrow">GRAPHWISE / GRAPH BUILDER</p><h1>Build a graph, then run it.</h1><p class="builder-intro">Place vertices on the grid, connect them, and see how each algorithm responds to your structure.</p><div class="builder-layout"><section id="builder-canvas-section" class="builder-canvas card" aria-labelledby="builder-canvas-title"><header><div><h2 id="builder-canvas-title">Your graph</h2><p>Drag a node to place it. Select two nodes to connect them. Select an edge to edit its weight.</p></div><div class="builder-actions"><button id="builder-add" type="button">Add node</button><button id="builder-delete" type="button">Delete node</button><button id="builder-clear" type="button">Clear</button><div class="builder-zoom" role="group" aria-label="Grid zoom"><button id="builder-zoom-out" type="button" aria-label="Zoom out">−</button><output id="builder-zoom-value">100%</output><button id="builder-zoom-in" type="button" aria-label="Zoom in">+</button></div></div></header><div id="builder-grid" class="builder-grid"></div></section><aside id="builder-panel-section" class="builder-panel card" aria-labelledby="builder-settings-title"><h2 id="builder-settings-title">Run settings</h2><div class="builder-panel-body"><label class="builder-algorithm-field">Algorithm<span class="select-box"><select id="builder-algorithm">${algorithms.map(item => `<option value="${item.id}">${item.name}</option>`).join('')}</select></span></label><label class="builder-check"><input id="builder-directed" type="checkbox"> Directed edges</label><label class="builder-check"><input id="builder-weighted" type="checkbox"> Add edge weights</label><label id="builder-weight-label" class="builder-weight-field">Selected edge weight<input id="builder-weight" type="number" min="0" step="1" disabled></label><p id="builder-help" class="builder-help">Select two nodes to add an edge.</p><button id="builder-run" class="button primary" type="button">Run algorithm</button><div id="builder-error" class="builder-error" role="alert" hidden></div></div></aside></div><section id="builder-result" class="builder-result card" hidden aria-live="polite"></section></section>`;
+  main.innerHTML = `<section class="builder-page"><p class="eyebrow">GRAPHWISE / GRAPH BUILDER</p><h1>Build a graph, then run it.</h1><p class="builder-intro">Place vertices on the grid, connect them, and see how each algorithm responds to your structure.</p><div class="builder-layout"><section id="builder-canvas-section" class="builder-canvas card" aria-labelledby="builder-canvas-title"><header><div><h2 id="builder-canvas-title">Your graph</h2><p>Drag a node to place it. Select two nodes to connect them. Select an edge to edit its weight. Ctrl + scroll or pinch to zoom; drag empty space to pan.</p></div><div class="builder-actions"><button id="builder-add" type="button">Add node</button><button id="builder-delete" type="button">Delete node</button><button id="builder-clear" type="button">Clear</button><div class="builder-zoom" role="group" aria-label="Grid zoom"><button id="builder-zoom-out" type="button" aria-label="Zoom out">−</button><button id="builder-zoom-value" class="builder-zoom-value" type="button" title="Reset zoom" aria-label="Reset zoom to 100%">100%</button><button id="builder-zoom-in" type="button" aria-label="Zoom in">+</button></div></div></header><div id="builder-grid" class="builder-grid"></div></section><aside id="builder-panel-section" class="builder-panel card" aria-labelledby="builder-settings-title"><h2 id="builder-settings-title">Run settings</h2><div class="builder-panel-body"><label class="builder-algorithm-field">Algorithm<span class="select-box"><select id="builder-algorithm">${algorithms.map(item => `<option value="${item.id}">${item.name}</option>`).join('')}</select></span></label><label class="builder-check"><input id="builder-directed" type="checkbox"> Directed edges</label><label class="builder-check"><input id="builder-weighted" type="checkbox"> Add edge weights</label><label id="builder-weight-label" class="builder-weight-field">Selected edge weight<input id="builder-weight" type="number" min="0" step="1" disabled></label><p id="builder-help" class="builder-help">Select two nodes to add an edge.</p><button id="builder-run" class="button primary" type="button">Run algorithm</button><div id="builder-error" class="builder-error" role="alert" hidden></div></div></aside></div><section id="builder-result" class="builder-result card" hidden aria-live="polite"></section></section>`;
   const grid = main.querySelector<HTMLElement>('#builder-grid')!;
   const error = main.querySelector<HTMLElement>('#builder-error')!;
   const result = main.querySelector<HTMLElement>('#builder-result')!;
@@ -57,52 +57,138 @@ export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<stri
     timer = undefined;
     playing = false;
   };
+  // The grid zooms by changing the SVG viewBox, so drawing stays sharp and pointer maths stays exact.
+  const view = { width: 460, height: 250, cx: 230, cy: 125 };
+  const minZoom = 0.5, maxZoom = 3, dragThreshold = 4;
+  const viewBox = () => {
+    const width = view.width / zoom, height = view.height / zoom;
+    return `${view.cx - width / 2} ${view.cy - height / 2} ${width} ${height}`;
+  };
+  const toGraphPoint = (clientX: number, clientY: number) => {
+    const svg = grid.querySelector('svg');
+    const ctm = svg instanceof SVGSVGElement ? svg.getScreenCTM() : null;
+    if (!svg || !ctm) return undefined;
+    return new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
+  };
+  const help = main.querySelector<HTMLElement>('#builder-help')!;
+  const updateHelp = () => {
+    help.textContent = state.selected
+      ? `${state.selected} is selected. Select another node to connect it, select ${state.selected} again to deselect, or delete it.`
+      : state.selectedEdge && weighted.checked ? `Edge ${state.selectedEdge.replace('-', '–')} is selected. Set its weight above.`
+      : 'Select two nodes to add an edge.';
+  };
+  const connect = (from: VertexId, to: VertexId) => {
+    const id = directed.checked ? `${from}-${to}` : [from, to].sort().join('-');
+    const exists = state.graph.edges.some(edge => edge.id === id || (!directed.checked && [edge.from, edge.to].sort().join('-') === id));
+    if (!exists) state.graph.edges.push({ id, from, to, ...(weighted.checked ? { weight: 1 } : {}) });
+  };
+  const selectVertex = (id: VertexId) => {
+    delete state.selectedEdge;
+    if (!state.selected) state.selected = id;
+    else if (state.selected === id) delete state.selected;
+    else { connect(state.selected, id); delete state.selected; }
+    render();
+  };
+  let frameRequest: number | undefined;
+  const scheduleRender = () => {
+    if (frameRequest !== undefined) return;
+    frameRequest = requestAnimationFrame(() => { frameRequest = undefined; render(); });
+  };
+
   const render = () => {
     const graph = createGraph(state.graph, state.positions);
     const frame = state.run?.frames[Math.min(frameIndex, state.run.frames.length - 1)];
     graph.update(frame ?? { index: 0, event: 'builder', lineId: null, title: 'Ready to run', change: '', reason: '', highlights: {}, state: { kind: 'dfs', stack: [], order: [] } });
-    grid.replaceChildren(graph.picture);
     graph.picture.classList.add('builder-svg');
-    graph.picture.style.transform = `scale(${zoom})`;
-    graph.picture.style.transformOrigin = 'center center';
+    graph.picture.setAttribute('viewBox', viewBox());
+    grid.replaceChildren(graph.picture);
+    grid.classList.toggle('has-selection', Boolean(state.selected));
     for (const vertex of state.graph.vertices) {
       const node = grid.querySelector<SVGGElement>(`[data-vertex="${vertex.id}"]`)!;
       node.classList.toggle('node-selected', state.selected === vertex.id);
       node.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
         event.stopPropagation();
+        event.preventDefault();
+        const startX = event.clientX, startY = event.clientY;
+        let dragging = false;
+        // Select on release unless the pointer moved far enough to count as a drag. Drags re-render the
+        // SVG, which would otherwise swallow the browser's click event.
         const move = (moveEvent: PointerEvent) => {
-          const svg = grid.querySelector('svg');
-          if (!(svg instanceof SVGSVGElement)) return;
-          const point = svg.createSVGPoint();
-          point.x = moveEvent.clientX;
-          point.y = moveEvent.clientY;
-          const ctm = svg.getScreenCTM();
-          if (!ctm) return;
-          const cursor = point.matrixTransform(ctm.inverse());
+          if (!dragging && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) < dragThreshold) return;
+          dragging = true;
+          grid.classList.add('is-dragging');
+          const cursor = toGraphPoint(moveEvent.clientX, moveEvent.clientY);
+          if (!cursor) return;
           state.positions[vertex.id] = [Math.max(25, Math.min(435, cursor.x)), Math.max(25, Math.min(225, cursor.y))];
-          render();
+          scheduleRender();
         };
-        const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
-        window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
-      });
-      node.addEventListener('click', () => {
-        if (!state.selected) { state.selected = vertex.id; return; }
-        if (state.selected !== vertex.id) {
-          const from = state.selected; const to = vertex.id; const pair = directed.checked ? `${from}-${to}` : [from, to].sort().join('-');
-          if (!state.graph.edges.some(edge => edge.id === pair || (!directed.checked && edge.id === [to, from].sort().join('-')))) state.graph.edges.push({ id: pair, from, to, ...(weighted.checked ? { weight: 1 } : {}) });
-        }
-        state.selected = undefined; render();
+        const up = () => {
+          window.removeEventListener('pointermove', move);
+          window.removeEventListener('pointerup', up);
+          window.removeEventListener('pointercancel', up);
+          grid.classList.remove('is-dragging');
+          if (!dragging) selectVertex(vertex.id);
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+        window.addEventListener('pointercancel', up);
       });
     }
     state.graph.edges.forEach(edge => {
       const edgeNode = grid.querySelector<SVGGElement>(`[data-edge="${edge.id}"]`);
-      edgeNode?.addEventListener('click', event => { event.stopPropagation(); state.selectedEdge = edge.id; weight.value = String(edge.weight ?? 1); weight.disabled = !weighted.checked; weightLabel.hidden = !weighted.checked; });
+      if (!edgeNode) return;
+      edgeNode.classList.toggle('edge-selected', state.selectedEdge === edge.id);
+      // A wide invisible copy of the line makes thin edges easy to click.
+      const line = edgeNode.querySelector('.graph-edge');
+      if (line) {
+        const hit = line.cloneNode() as SVGPathElement;
+        hit.setAttribute('class', 'edge-hit');
+        hit.removeAttribute('marker-end');
+        edgeNode.prepend(hit);
+      }
+      edgeNode.addEventListener('pointerdown', event => event.stopPropagation());
+      edgeNode.addEventListener('click', event => {
+        event.stopPropagation();
+        delete state.selected;
+        state.selectedEdge = edge.id;
+        render();
+        if (weighted.checked) weight.focus();
+      });
     });
     weightLabel.hidden = !weighted.checked;
     weight.disabled = !weighted.checked || !state.selectedEdge;
     if (state.selectedEdge) weight.value = String(state.graph.edges.find(edge => edge.id === state.selectedEdge)?.weight ?? 1);
     (main.querySelector('#builder-delete')! as HTMLButtonElement).disabled = !state.selected;
+    updateHelp();
   };
+
+  // Empty grid: click to clear the selection, drag to pan when zoomed in.
+  grid.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    const start = { x: event.clientX, y: event.clientY, cx: view.cx, cy: view.cy };
+    let panning = false;
+    const move = (moveEvent: PointerEvent) => {
+      const dx = moveEvent.clientX - start.x, dy = moveEvent.clientY - start.y;
+      if (!panning && Math.hypot(dx, dy) < dragThreshold) return;
+      panning = true;
+      grid.classList.add('is-panning');
+      const scale = (view.width / zoom) / grid.getBoundingClientRect().width;
+      view.cx = Math.max(0, Math.min(view.width, start.cx - dx * scale));
+      view.cy = Math.max(0, Math.min(view.height, start.cy - dy * scale));
+      grid.querySelector('svg')?.setAttribute('viewBox', viewBox());
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      grid.classList.remove('is-panning');
+      if (!panning && (state.selected || state.selectedEdge)) { delete state.selected; delete state.selectedEdge; render(); }
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  });
   main.querySelector('#builder-add')!.addEventListener('click', () => { const id = String.fromCharCode(65 + state.graph.vertices.length); state.graph.vertices.push({ id, label: id }); state.positions[id] = [230, 125]; render(); });
   main.querySelector('#builder-delete')!.addEventListener('click', () => {
     if (!state.selected) return;
@@ -125,7 +211,7 @@ export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<stri
     frameIndex = 0;
     playing = false;
     speed = 1;
-    zoom = 1;
+    resetView();
     algorithm.value = algorithms[0].id;
     enhanceSelect(algorithm).refresh();
     directed.checked = false;
@@ -137,13 +223,45 @@ export function mountBuilder(main: HTMLElement, runCustom: (payload: Record<stri
     error.textContent = '';
     result.hidden = true;
     result.replaceChildren();
-    main.querySelector<HTMLOutputElement>('#builder-zoom-value')!.value = '100%';
     render();
   });
-  const setZoom = (value: number) => { zoom = Math.max(0.7, Math.min(2, value)); main.querySelector<HTMLOutputElement>('#builder-zoom-value')!.value = `${Math.round(zoom * 100)}%`; render(); };
-  main.querySelector('#builder-zoom-out')!.addEventListener('click', () => setZoom(zoom - 0.1));
-  main.querySelector('#builder-zoom-in')!.addEventListener('click', () => setZoom(zoom + 0.1));
-  grid.addEventListener('wheel', event => { if (!event.ctrlKey) return; event.preventDefault(); setZoom(zoom + (event.deltaY < 0 ? 0.1 : -0.1)); }, { passive: false });
+  const zoomValue = main.querySelector<HTMLButtonElement>('#builder-zoom-value')!;
+  // Zoom keeps the graph point under `anchor` fixed on screen (the grid centre for the buttons).
+  const setZoom = (value: number, anchor?: { x: number; y: number }) => {
+    const next = Math.max(minZoom, Math.min(maxZoom, value));
+    if (next === zoom) return;
+    const before = anchor && toGraphPoint(anchor.x, anchor.y);
+    zoom = next;
+    const svg = grid.querySelector('svg');
+    svg?.setAttribute('viewBox', viewBox());
+    const after = anchor && toGraphPoint(anchor.x, anchor.y);
+    if (before && after) {
+      view.cx = Math.max(0, Math.min(view.width, view.cx + before.x - after.x));
+      view.cy = Math.max(0, Math.min(view.height, view.cy + before.y - after.y));
+      svg?.setAttribute('viewBox', viewBox());
+    }
+    zoomValue.textContent = `${Math.round(zoom * 100)}%`;
+    grid.classList.toggle('is-zoomed', zoom > 1);
+  };
+  const zoomStep = 1.2;
+  main.querySelector('#builder-zoom-out')!.addEventListener('click', () => setZoom(zoom / zoomStep));
+  main.querySelector('#builder-zoom-in')!.addEventListener('click', () => setZoom(zoom * zoomStep));
+  function resetView() {
+    zoom = 1;
+    view.cx = view.width / 2;
+    view.cy = view.height / 2;
+    grid.querySelector('svg')?.setAttribute('viewBox', viewBox());
+    zoomValue.textContent = '100%';
+    grid.classList.remove('is-zoomed');
+  }
+  zoomValue.addEventListener('click', resetView);
+  // Ctrl/⌘ + wheel, or a trackpad pinch (reported as ctrl + wheel), zooms smoothly toward the cursor.
+  grid.addEventListener('wheel', event => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+    setZoom(zoom * Math.exp(-Math.max(-60, Math.min(60, delta)) * 0.004), { x: event.clientX, y: event.clientY });
+  }, { passive: false });
   directed.addEventListener('change', () => { state.graph.directed = directed.checked; render(); });
   weighted.addEventListener('change', () => { state.graph.edges = state.graph.edges.map(edge => weighted.checked ? { ...edge, weight: edge.weight ?? 1 } : (({ weight: _weight, ...unweighted }) => unweighted)(edge)); render(); });
   weight.addEventListener('input', () => { const edge = state.graph.edges.find(item => item.id === state.selectedEdge); const value = Number(weight.value); if (edge && Number.isInteger(value) && value >= 0) { edge.weight = value; render(); } });

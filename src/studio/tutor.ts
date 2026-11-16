@@ -306,7 +306,12 @@ export class TutorPanel {
       h(
         "header",
         { class: "tutor__head" },
-        h("div", {}, h("p", { class: "tutor-label" }, "Study helper · AI"), h("h2", { id: "tutor-title" }, "Chat with Graphwise")),
+        h(
+          "div",
+          { class: "tutor__brand" },
+          h("span", { class: "tutor__avatar", "aria-hidden": "true" }, ICON.chat()),
+          h("div", {}, h("p", { class: "tutor-label" }, "Study helper · AI"), h("h2", { id: "tutor-title" }, "Chat with Graphwise")),
+        ),
         h("div", { class: "tutor__head-actions" }, reset, close),
       ),
       this.contextLine,

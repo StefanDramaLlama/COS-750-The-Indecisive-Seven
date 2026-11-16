@@ -4,7 +4,7 @@ Graphwise is an interactive learning app for the COS 212 graph data structures a
 
 - **Graph Basics** introduces graph concepts. Its Foundations tab covers directed, undirected, and weighted graphs, with an interactive lab for adjacency lists and matrices.
 - **Algorithm Studio** pairs visual walkthroughs and pseudocode with guided practice for BFS, DFS, Dijkstra, topological sort, Kruskal, and Prim. It also includes side-by-side algorithm comparisons.
-- **Graph Builder** lets learners create a graph and run algorithms on it. **Algorithm Quiz** unlocks after they complete all Studio practice exercises.
+- **Graph Builder** lets learners create a graph and run algorithms on it. **Algorithm Quiz** is currently open to everyone; set `quizRequiresAllLessons` in `src/shared/contracts.ts` to `true` to unlock it only after all Studio practice exercises.
 
 ## Run locally
 
