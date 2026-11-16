@@ -16,8 +16,25 @@ export function routeLink(text: string, href: string, className?: string) {
   return link;
 }
 
+export function graphBasicsTabs(active: 'basics' | 'foundations', foundationPath = '/graph-adt/undirected') {
+  const nav = element('nav', undefined, 'basics-tabs');
+  nav.setAttribute('aria-label', 'Graph basics sections');
+  const basics = routeLink('Basics', lessonUrl('basics'));
+  const foundations = element('a', 'Foundations');
+  foundations.href = foundationPath;
+  (active === 'basics' ? basics : foundations).setAttribute('aria-current', 'page');
+  nav.append(basics, foundations);
+  return nav;
+}
+
 function options(select: HTMLSelectElement, entries: { id: string; name: string }[]) {
   select.replaceChildren(...entries.map(({ id, name }) => new Option(name, id)));
+}
+
+export function setupLessonSelect(select: HTMLSelectElement, lessons: LessonSummary[], active: LessonSummary['id']) {
+  options(select, lessons);
+  select.value = active;
+  enhanceSelect(select).refresh();
 }
 
 function renderPrimer(primer: Primer) {
@@ -136,6 +153,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
       </details>
     </div>`;
   const q = <T extends HTMLElement>(selector: string) => required<T>(main, selector);
+  if (lesson.id === 'basics') q('.viewbar').before(graphBasicsTabs('basics'));
   const comparing = isComparison(lesson.id);
   const courseId = comparing ? comparisonsId : lesson.id;
   const number = lessons.findIndex(item => item.id === courseId) + 1;
@@ -152,9 +170,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
   q('#assumption').textContent = lesson.prerequisites;
   q('#code-title').textContent = lesson.name;
   const lessonSelect = q<HTMLSelectElement>('#lesson-select');
-  options(lessonSelect, lessons);
-  lessonSelect.value = courseId;
-  enhanceSelect(lessonSelect);
+  setupLessonSelect(lessonSelect, lessons, courseId);
   const pairStatuses = new Map<LessonSummary['id'], HTMLElement>();
   if (comparing) {
     const picker = element('nav', undefined, 'comparison-picker');
