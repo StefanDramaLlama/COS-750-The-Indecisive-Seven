@@ -1,4 +1,4 @@
-import { required } from '../studio/dom.ts';
+import { enhanceSelect, required } from '../studio/dom.ts';
 import { buildCode } from './code.ts';
 import type { Representation } from './code.ts';
 import { COMPARISON, CONTENT, opDocs } from './content.ts';
@@ -490,52 +490,106 @@ export function mountFoundationLesson(main: HTMLElement, announcement: HTMLEleme
     stepCard.replaceChildren(...children);
   }
 
-  function renderControls() {
-    const last = session.frames.length - 1;
-    controlsHost.replaceChildren();
-    const prevOp = btn('⏮', () => { pause(); goto(opBounds(-1)); }, 'btn icon');
-    prevOp.setAttribute('aria-label', 'Jump to the start of the previous operation');
-    prevOp.disabled = index === 0;
-    const back = btn('◀ Back', () => { pause(); goto(index - 1); }, 'btn');
-    back.disabled = index === 0;
-    const playButton = btn(playing ? '❚❚ Pause' : '▶ Play', () => (playing ? pause() : play()), 'btn primary');
-    playButton.disabled = last === 0;
-    const next = btn('Next ▶', () => { pause(); goto(index + 1); }, 'btn');
-    next.disabled = index === last;
-    const nextOp = btn('⏭', () => { pause(); goto(opBounds(1)); }, 'btn icon');
-    nextOp.setAttribute('aria-label', 'Jump to the start of the next operation');
-    nextOp.disabled = index === last;
-    const restart = btn('↺', () => { pause(); goto(0); }, 'btn icon');
-    restart.setAttribute('aria-label', 'Restart from the first step');
-    restart.disabled = index === 0;
+  // Playback controls use the Studio's buttons, dropdown and switch. They are built once and updated each step, so focus and the open dropdown survive playback.
+  const icon = (d: string) => `<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" /></svg>`;
+  const ICONS = {
+    restart: 'M4 10V4m0 0h6M4 4l4 4a8 8 0 1 1-1 10',
+    prevOp: 'M6 5v14M18 6l-8 6 8 6z',
+    back: 'M19 12H5m7-7-7 7 7 7',
+    play: 'm8 5 11 7-11 7z',
+    pause: 'M8 5v14M16 5v14',
+    next: 'M5 12h14m-7-7 7 7-7 7',
+    nextOp: 'M18 5v14M6 6l8 6-8 6z'
+  };
+  function controlButton(name: keyof typeof ICONS, label: string, aria: string, action: () => void, trailing = false): HTMLButtonElement {
+    const b = el('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', aria);
+    b.innerHTML = trailing ? `<span class="button-label">${label}</span>${icon(ICONS[name])}` : `${icon(ICONS[name])}<span class="button-label">${label}</span>`;
+    b.addEventListener('click', action);
+    return b;
+  }
+  let controls: {
+    restart: HTMLButtonElement; prevOp: HTMLButtonElement; back: HTMLButtonElement; play: HTMLButtonElement;
+    next: HTMLButtonElement; nextOp: HTMLButtonElement; scrub: HTMLInputElement; count: HTMLElement;
+    sound: HTMLButtonElement; speech?: HTMLInputElement;
+  } | undefined;
+
+  function buildControls() {
+    const restart = controlButton('restart', 'Restart', 'Restart from the first step', () => { pause(); goto(0); });
+    const prevOp = controlButton('prevOp', 'Previous operation', 'Jump to the start of the previous operation', () => { pause(); goto(opBounds(-1)); });
+    const back = controlButton('back', 'Back', 'Back', () => { pause(); goto(index - 1); });
+    const playButton = controlButton('play', 'Play', 'Play', () => (playing ? pause() : play()));
+    const next = controlButton('next', 'Next step', 'Next step', () => { pause(); goto(index + 1); }, true);
+    next.classList.add('primary');
+    const nextOp = controlButton('nextOp', 'Next operation', 'Jump to the start of the next operation', () => { pause(); goto(opBounds(1)); }, true);
+    prevOp.classList.add('op-jump');
+    nextOp.classList.add('op-jump');
+    const buttons = el('div', 'adt-buttons');
+    buttons.append(restart, prevOp, back, playButton, next, nextOp);
+
     const scrub = el('input', 'scrub');
-    scrub.type = 'range'; scrub.min = '0'; scrub.max = String(last); scrub.value = String(index);
+    scrub.type = 'range'; scrub.min = '0';
     scrub.setAttribute('aria-label', 'Step');
-    scrub.setAttribute('aria-valuetext', `Step ${index + 1} of ${last + 1}`);
-    scrub.disabled = last === 0;
-    scrub.addEventListener('input', () => { pause(); goto(Number(scrub.value)); });
-    const count = el('span', 'step-count', `${index + 1} / ${last + 1}`);
-    const speedSelect = el('select', 'speed');
+    scrub.addEventListener('input', () => { const target = Number(scrub.value); pause(); goto(target); });
+    const count = el('span', 'step-count');
+    const timeline = el('div', 'adt-timeline');
+    timeline.append(scrub, count);
+
+    const settings = el('div', 'adt-settings');
+    const speedBox = el('label', 'select-box adt-speed');
+    speedBox.append(el('span', 'adt-speed-label', 'Speed'));
+    const speedSelect = el('select');
     speedSelect.setAttribute('aria-label', 'Playback speed');
     for (const s of [0.5, 1, 2]) speedSelect.append(Object.assign(el('option'), { value: String(s), textContent: `${s}×`, selected: s === speed }));
     speedSelect.addEventListener('change', () => { speed = Number(speedSelect.value); });
-    const sound = btn(isMuted() ? '🔇 Sound off' : '🔊 Sound on', () => { setMuted(!isMuted()); renderControls(); }, 'btn small');
-    sound.setAttribute('aria-pressed', String(!isMuted()));
-    const row1 = el('div', 'row');
-    row1.append(restart, prevOp, back, playButton, next, nextOp);
-    const row2 = el('div', 'row');
-    row2.append(scrub, count);
-    const row3 = el('div', 'row wrap');
-    const speedLabel = el('label', 'inline-label', 'Speed');
-    speedSelect.id = 'speed-select';
-    speedLabel.htmlFor = 'speed-select';
-    row3.append(speedLabel, speedSelect, sound);
+    speedBox.append(speedSelect);
+    settings.append(speedBox);
+    enhanceSelect(speedSelect);
+
+    // The sound button keeps its own look on purpose: it is the page's volume control.
+    const sound = btn('', () => { setMuted(!isMuted()); renderControls(); }, 'btn small');
+    settings.append(sound);
+
+    let speech: HTMLInputElement | undefined;
     if (canSpeak()) {
-      const speech = btn(isSpeaking() ? '🗣 Reading aloud' : '🗣 Read steps aloud', () => { setSpeaking(!isSpeaking()); if (isSpeaking()) speak(session.frames[index].log); renderControls(); }, 'btn small');
-      speech.setAttribute('aria-pressed', String(isSpeaking()));
-      row3.append(speech);
+      const toggle = el('label', 'spatial-toggle');
+      speech = el('input');
+      speech.type = 'checkbox';
+      const input = speech;
+      input.addEventListener('change', () => { setSpeaking(input.checked); if (input.checked) speak(session.frames[index].log); });
+      toggle.append(input, el('span', undefined, 'Read steps aloud'));
+      settings.append(toggle);
     }
-    controlsHost.append(row1, row2, row3);
+
+    controlsHost.classList.add('adt-controls');
+    controlsHost.replaceChildren(buttons, timeline, settings);
+    return { restart, prevOp, back, play: playButton, next, nextOp, scrub, count, sound, speech };
+  }
+
+  function renderControls() {
+    controls ??= buildControls();
+    const last = session.frames.length - 1;
+    const c = controls;
+    c.restart.disabled = index === 0;
+    c.prevOp.disabled = index === 0;
+    c.back.disabled = index === 0;
+    c.next.disabled = index === last;
+    c.nextOp.disabled = index === last;
+    c.play.disabled = last === 0;
+    const playLabel = playing ? 'Pause' : 'Play';
+    if (c.play.getAttribute('aria-label') !== playLabel) {
+      c.play.setAttribute('aria-label', playLabel);
+      c.play.innerHTML = `${icon(playing ? ICONS.pause : ICONS.play)}<span class="button-label">${playLabel}</span>`;
+    }
+    c.scrub.max = String(last);
+    c.scrub.value = String(index);
+    c.scrub.disabled = last === 0;
+    c.scrub.setAttribute('aria-valuetext', `Step ${index + 1} of ${last + 1}`);
+    c.count.textContent = `${index + 1} / ${last + 1}`;
+    c.sound.textContent = isMuted() ? '🔇 Sound off' : '🔊 Sound on';
+    c.sound.setAttribute('aria-pressed', String(!isMuted()));
+    if (c.speech) c.speech.checked = isSpeaking();
   }
 
   function renderFacts(graph: GraphData) {

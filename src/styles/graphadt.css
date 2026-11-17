@@ -115,11 +115,27 @@ figure.card { margin: 0; }
 .rubber { stroke: var(--cyan); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
 .empty-note { fill: var(--muted); font-size: 15px; font-weight: 650; }
 
-.controls { display: grid; gap: 10px; }
+/* Playback controls: same buttons, dropdown and switch as the Studio lessons. */
+.adt-controls { display: grid; gap: 12px; padding: 12px; }
+.adt-buttons, .adt-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-width: 0; }
+.adt-controls .adt-buttons button { flex: 0 0 auto; }
+.adt-timeline { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .scrub { flex: 1; min-width: 0; height: 28px; accent-color: var(--cyan); }
-.step-count { color: var(--muted); font: 650 12px ui-monospace, monospace; min-width: 56px; text-align: right; }
+.step-count { flex: 0 0 auto; color: var(--muted); font: 650 12px ui-monospace, monospace; min-width: 48px; text-align: right; }
 .inline-label { font-size: 12px; font-weight: 700; color: var(--muted); }
-.speed { min-width: 72px; }
+.adt-controls .select-box.adt-speed { z-index: 5; margin-left: 0; padding-left: 12px; }
+.adt-speed-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+.adt-controls .adt-settings .btn.small { min-height: 40px; }
+.adt-controls .spatial-toggle { margin-left: 2px; }
+/* Operation jumps are extras: show them as icons until there is room for words. */
+.adt-controls .op-jump .button-label { display: none; }
+.adt-controls .op-jump { min-width: 42px; }
+@media (max-width: 660px) {
+  .adt-controls { padding: 10px; }
+  .adt-buttons { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .adt-controls .adt-buttons button { min-width: 0; padding-inline: 0; }
+  .adt-settings { gap: 8px; }
+}
 .step-card { border-left: 4px solid var(--cyan); }
 .step-card.pane-result { border-left-color: var(--green); }
 .step-card.pane-rejected { border-left-color: var(--spatial-active); }
