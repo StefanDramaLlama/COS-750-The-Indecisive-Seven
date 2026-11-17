@@ -4,7 +4,7 @@ type BankQuestion =
   | (Extract<QuizQuestion, { kind: 'choice' }> & { answer: string; explanation: string })
   | (Extract<QuizQuestion, { kind: 'written' }> & { modelAnswer: string });
 
-// Question bank from README.md, section 8. Keep answer keys on the server.
+// Keep quiz answer keys on the server.
 export const quizQuestions: BankQuestion[] = [
   { id: 1, topic: "Graph foundations", kind: "choice",
     prompt: "What two components make up every graph?",

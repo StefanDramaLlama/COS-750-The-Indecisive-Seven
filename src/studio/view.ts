@@ -16,8 +16,25 @@ export function routeLink(text: string, href: string, className?: string) {
   return link;
 }
 
+export function graphBasicsTabs(active: 'basics' | 'foundations', foundationPath = '/graph-adt/undirected') {
+  const nav = element('nav', undefined, 'basics-tabs');
+  nav.setAttribute('aria-label', 'Graph basics sections');
+  const basics = routeLink('Basics', lessonUrl('basics'));
+  const foundations = element('a', 'Foundations');
+  foundations.href = foundationPath;
+  (active === 'basics' ? basics : foundations).setAttribute('aria-current', 'page');
+  nav.append(basics, foundations);
+  return nav;
+}
+
 function options(select: HTMLSelectElement, entries: { id: string; name: string }[]) {
   select.replaceChildren(...entries.map(({ id, name }) => new Option(name, id)));
+}
+
+export function setupLessonSelect(select: HTMLSelectElement, lessons: LessonSummary[], active: LessonSummary['id']) {
+  options(select, lessons);
+  select.value = active;
+  enhanceSelect(select).refresh();
 }
 
 function renderPrimer(primer: Primer) {
@@ -37,6 +54,46 @@ function renderPrimer(primer: Primer) {
   toolbar.append(before, after);
   card.append(element('h3', primer.title), toolbar, canvas, caption, element('p', primer.takeaway));
   show('before');
+  return card;
+}
+
+const introKey = (id: string) => `graphwise-intro-${id}`;
+
+// "Before you start": open on a learner's first visit to a lesson, then remembers whether they collapsed it.
+function renderIntro(lesson: Lesson, comparing: boolean) {
+  const { intro } = lesson;
+  const card = element('details', undefined, 'intro card');
+  card.id = 'lesson-intro';
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(introKey(lesson.id)) === 'closed'; } catch { /* Default to open. */ }
+  card.open = !collapsed;
+  card.addEventListener('toggle', () => {
+    try { localStorage.setItem(introKey(lesson.id), card.open ? 'open' : 'closed'); } catch { /* The card still toggles. */ }
+  });
+
+  const summary = element('summary');
+  summary.append(element('span', 'NEW TO THIS? START HERE', 'eyebrow'),
+    element('strong', comparing ? `Before you compare: ${lesson.name}` : `Before you start: what is ${lesson.name}?`));
+
+  const section = (heading: string, className: string, ...children: Node[]) => {
+    const block = element('section', undefined, `intro-block ${className}`);
+    block.append(element('h3', heading), ...children);
+    return block;
+  };
+  const steps = element('ol');
+  for (const step of intro.steps) steps.append(element('li', step));
+  const terms = element('dl');
+  for (const { term, meaning } of intro.terms) terms.append(element('dt', term), element('dd', meaning));
+
+  const body = element('div', undefined, 'intro-body');
+  body.append(
+    section('The problem', 'intro-problem', element('p', intro.problem)),
+    section('Picture it', 'intro-analogy', element('p', intro.analogy)),
+    section('The idea in plain words', 'intro-steps', steps),
+    section('Key terms', 'intro-terms', terms),
+    section('Watch out', 'intro-pitfall', element('p', intro.pitfall))
+  );
+  card.append(summary, body);
   return card;
 }
 
@@ -136,6 +193,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
       </details>
     </div>`;
   const q = <T extends HTMLElement>(selector: string) => required<T>(main, selector);
+  if (lesson.id === 'basics') q('.viewbar').before(graphBasicsTabs('basics'));
   const comparing = isComparison(lesson.id);
   const courseId = comparing ? comparisonsId : lesson.id;
   const number = lessons.findIndex(item => item.id === courseId) + 1;
@@ -152,9 +210,7 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
   q('#assumption').textContent = lesson.prerequisites;
   q('#code-title').textContent = lesson.name;
   const lessonSelect = q<HTMLSelectElement>('#lesson-select');
-  options(lessonSelect, lessons);
-  lessonSelect.value = courseId;
-  enhanceSelect(lessonSelect);
+  setupLessonSelect(lessonSelect, lessons, courseId);
   const pairStatuses = new Map<LessonSummary['id'], HTMLElement>();
   if (comparing) {
     const picker = element('nav', undefined, 'comparison-picker');
@@ -177,13 +233,18 @@ export function mountLesson(main: HTMLElement, lesson: Lesson, lessons: LessonSu
     tabs.set(name, link);
   }
 
+  if (lesson.intro) q('.viewbar').before(renderIntro(lesson, comparing));
+
   if (lesson.variants) {
+    const box = element('label', undefined, 'select-box variant-picker');
+    box.append(element('span', 'Algorithm variant', 'sr-only'));
     const picker = element('select', undefined, 'variant-select') as HTMLSelectElement;
     picker.id = 'variant-select';
-    picker.setAttribute('aria-label', 'Algorithm variant');
     for (const v of lesson.variants) picker.append(new Option(v.label, v.id));
     picker.value = lesson.variants[0].id;
-    q('#code-title').after(picker);
+    box.append(picker);
+    q('#code-title').after(box);
+    enhanceSelect(picker);
   }
 
   const code = q('#code-lines');

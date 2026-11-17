@@ -1,3 +1,6 @@
+/** When false, the Algorithm Quiz is open to everyone instead of unlocking after every lesson's practice. */
+export const quizRequiresAllLessons = false;
+
 export type LessonId = 'basics' | 'dijkstra' | 'bfs' | 'dfs' | 'topological-sort' | 'kruskal' | 'prim' | 'compare' | 'compare-trees';
 export type VertexId = string;
 export type EdgeId = string;
@@ -41,8 +44,18 @@ export interface CodeVariant {
   label: string;          
   code: CodeLine[];
 }
+export interface GlossaryTerm { term: string; meaning: string }
+/** Plain-language orientation for learners who are new to the algorithm. */
+export interface LessonIntro {
+  problem: string;
+  analogy: string;
+  steps: string[];
+  terms: GlossaryTerm[];
+  pitfall: string;
+}
 export interface Lesson extends LessonSummary {
   title: string;
+  intro: LessonIntro;
   summary: string;
   prerequisites: string;
   complexity: string;

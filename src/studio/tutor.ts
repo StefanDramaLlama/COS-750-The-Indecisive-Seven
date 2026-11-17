@@ -306,7 +306,12 @@ export class TutorPanel {
       h(
         "header",
         { class: "tutor__head" },
-        h("div", {}, h("p", { class: "tutor-label" }, "Study helper · AI"), h("h2", { id: "tutor-title" }, "Chat with Graphwise")),
+        h(
+          "div",
+          { class: "tutor__brand" },
+          h("span", { class: "tutor__avatar", "aria-hidden": "true" }, ICON.chat()),
+          h("div", {}, h("p", { class: "tutor-label" }, "Study helper · AI"), h("h2", { id: "tutor-title" }, "Chat with Graphwise")),
+        ),
         h("div", { class: "tutor__head-actions" }, reset, close),
       ),
       this.contextLine,
@@ -497,6 +502,18 @@ export function captureScreen(): { label: string; text: string } {
     return node && !node.closest("[hidden]") ? (node.innerText ?? node.textContent ?? "").trim() : "";
   };
   const title = read("h1") || "Algorithm Studio";
+  const foundation = read(".foundation-title");
+  if (foundation) {
+    const label = [title, "Foundations", foundation, read("#step-card .eyebrow")].filter(Boolean).join(" · ");
+    const text = [
+      `Page: ${label}`,
+      read(".adt-hero .lede"),
+      read("#step-card"),
+      read("#graph-host svg title"),
+      read("#memory"),
+    ].filter(Boolean).join("\n\n");
+    return { label, text: text.slice(0, 14_000) };
+  }
   const tab = read('.views [aria-current="page"]');
   const step = read("#step-count");
   const label = [title, tab, step].filter(Boolean).join(" · ");

@@ -1,8 +1,9 @@
 import type { CodeLine, Lesson, LessonId, LessonSummary } from '../../shared/contracts.ts';
 import { examples, primers } from './fixtures.ts';
+import { intros } from './intros.ts';
 
 const line = (id: string, text: string, explanation: string): CodeLine => ({ id, text, explanation });
-type LessonContent = Omit<Lesson, 'id' | 'examples'>;
+type LessonContent = Omit<Lesson, 'id' | 'examples' | 'intro'>;
 
 const content: Record<LessonId, LessonContent> = {
   basics: {
@@ -196,6 +197,7 @@ export const isLessonId = (id: unknown): id is LessonId => typeof id === 'string
 export function getLesson(id: LessonId): Lesson {
   return {
     id, ...content[id],
+    intro: intros[id],
     examples: examples[id].map(({ id, kind, title, scenario }) => ({ id, kind, title, scenario }))
   };
 }

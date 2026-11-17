@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Learn the Graph ADT: definition, properties, adjacency matrix and list representations, and every operation step by step.">
+  <title>Graphwise · Graph Foundations</title>
+  <link rel="icon" href="/assets/styles/graphwise.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/styles/studio.css">
+  <link rel="stylesheet" href="/assets/styles/graphadt.css">
+  <link rel="stylesheet" href="/assets/styles/tutor.css">
+  <script type="module" src="/assets/graphadt/page.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="layout">
+    <aside class="sidebar" id="course-nav">
+      <a class="brand" href="/algorithms">
+        <img src="/assets/styles/graphwise.svg" width="32" height="32" alt="">
+        <span>graphwise<span class="brand-tag">MAKE CONNECTIONS.</span></span>
+      </a>
+      <nav aria-label="Course navigation">
+        <p class="nav-label">YOUR LEARNING PATH</p>
+        <a href="/algorithms" class="nav-link"><span class="nav-icon" aria-hidden="true">▦</span> Course overview</a>
+        <a href="/algorithms/dijkstra" class="nav-link studio-nav" aria-current="true"><span class="nav-icon" aria-hidden="true">◎</span> Algorithm Studio</a>
+        <a href="/builder" class="nav-link"><span class="nav-icon" aria-hidden="true">⌘</span> Graph Builder</a>
+        <a href="/algorithms/quiz" class="nav-link"><span class="nav-icon" aria-hidden="true">✓</span> Algorithm Quiz
+          <span id="quiz-lock-label" class="quiz-lock-label"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg> Locked</span>
+        </a>
+        <p class="nav-label lesson-label">ALGORITHM STUDIO LESSONS</p>
+        <div id="lesson-links" class="lesson-links">
+          <a href="/algorithms/basics" class="lesson-link" aria-current="page">Graph basics</a>
+        </div>
+      </nav>
+      <section class="progress-card" aria-label="Course progress">
+        <p class="nav-label">YOUR PROGRESS</p>
+        <p id="progress-count">0 of 8 lessons complete</p>
+        <progress id="course-progress" max="8" value="0" aria-label="Lessons completed"></progress>
+        <p class="progress-foot">Self-paced. At your pace.</p>
+      </section>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="crumbs">
+          <button class="menu-toggle" type="button" aria-label="Show course navigation" aria-controls="course-nav" aria-expanded="false">☰</button>
+          <a class="mobile-brand" href="/algorithms"><img src="/assets/styles/graphwise.svg" width="26" height="26" alt="">graphwise</a>
+          <span class="breadcrumb">Algorithm Studio <span>/</span> Graph basics <span>/</span> <strong>Foundations</strong></span>
+        </div>
+        <div class="top-actions">
+          <a href="#definition">Learning guide</a>
+          <time id="clock" class="clock" aria-label="Current date and time"></time>
+          <label class="theme-control"><span aria-hidden="true">◐</span><span class="sr-only">Appearance</span>
+            <select id="theme">
+              <option value="light">Light</option><option value="dark">Dark</option>
+            </select>
+          </label>
+          <label class="theme-control accent-control"><span aria-hidden="true">✦</span><span class="sr-only">Accent color</span>
+            <select id="accent">
+              <option value="violet">Violet</option><option value="ocean">Ocean</option><option value="mint">Mint</option><option value="sunset">Sunset</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <main id="main" class="content" tabindex="-1">
+        <div class="lesson-head">
+          <div>
+            <p class="eyebrow">ALGORITHM STUDIO / FOUNDATIONS</p>
+            <h1>Graph basics</h1>
+          </div>
+          <label class="lesson-picker"><span>LESSON</span><span class="select-box"><select id="lesson-select"><option value="basics">Graph basics</option></select></span></label>
+        </div>
+        <nav class="kind-tabs" aria-label="Graph types"></nav>
+        <h2 class="foundation-title"></h2>
+        <div id="foundation-content"></div>
+      </main>
+    </div>
+  </div>
+  <div id="announcement" role="status" class="sr-only"></div>
+</body>
+</html>

@@ -1,32 +1,20 @@
 import type { Lesson, LessonSummary, PracticeAction, PracticeResponse, ProgressItem, Run } from '../shared/contracts.ts';
+import { ApiError, json } from './api.ts';
 import { button, element, enhanceSelect, required } from './dom.ts';
-import { comparisonPairs, comparisonsId, createComparison, isComparison } from './compare.ts';
+import { comparisonPairs, createComparison, isComparison } from './compare.ts';
+import { listCourseLessons, renderCourseNav } from './course-nav.ts';
 import { createGraph } from './graph.ts';
 import { createSpatialGraph } from './spatial.ts';
 import { mountBuilder } from './builder.ts';
 import { mountQuiz } from './quiz.ts';
 import { renderState } from './state.ts';
+import { mountTheme } from './theme.ts';
 import { captureScreen, TutorPanel } from './tutor.ts';
 import { lessonUrl, mountLesson, renderOverview, routeLink } from './view.ts';
 import type { View } from './view.ts';
 
-class ApiError extends Error {
-  constructor(message: string, readonly status: number) { super(message); }
-}
-
-async function json<T>(path: string, signal?: AbortSignal, body?: unknown): Promise<T> {
-  const response = await fetch(path, { signal, ...(body !== undefined ? {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-  } : {}) });
-  const data = await response.json().catch(() => undefined);
-  if (!response.ok || data === undefined) throw new ApiError(data?.error?.message ?? 'The studio could not load this request.', response.status);
-  return data as T;
-}
-
 const main = required(document, '#main');
-const nav = required(document, '#lesson-links');
 const quizNav = required(document, '#quiz-nav');
-const quizLock = required(document, '#quiz-lock-label');
 const courseNav = required(document, '#course-nav');
 const menu = required<HTMLButtonElement>(document, '.menu-toggle');
 const guideLink = required(document, '#guide-link');
@@ -61,23 +49,13 @@ let reviewLine: string | undefined;
 let failed: { message: string; retry: () => void } | undefined;
 let currentVariant: string | undefined;
 
-function setTheme(value: string) {
-  const next = value === 'dark' ? 'dark' : 'light';
-  document.documentElement.dataset.theme = next;
-  theme.value = next;
-}
-try { setTheme(localStorage.getItem('graphwise-theme') ?? 'light'); } catch { setTheme('light'); }
-theme.addEventListener('change', () => {
-  setTheme(theme.value);
-  try { localStorage.setItem('graphwise-theme', theme.value); } catch { /* The current theme still applies. */ }
-});
+mountTheme(theme);
 
 function setAccent(value: string) {
   document.documentElement.dataset.accent = ['violet', 'ocean', 'mint', 'sunset'].includes(value) ? value : 'violet';
   accent.value = document.documentElement.dataset.accent;
 }
 try { setAccent(localStorage.getItem('graphwise-accent') ?? 'violet'); } catch { setAccent('violet'); }
-enhanceSelect(theme);
 enhanceSelect(accent);
 accent.addEventListener('change', () => {
   setAccent(accent.value);
@@ -111,33 +89,7 @@ guideLink.addEventListener('click', () => {
 });
 
 function renderProgress() {
-  const completed = new Set(lessons.filter(lesson => progress.some(item => item.lessonId === lesson.id &&
-    item.version === lesson.version && item.completedAt)).map(lesson => lesson.id));
-  const isComplete = (id: LessonSummary['id']) => id === comparisonsId
-    ? comparisonPairs.every(pair => completed.has(pair.id))
-    : completed.has(id);
-  const courseCompleted = courseLessons.filter(item => isComplete(item.id)).length;
-  const meter = required<HTMLProgressElement>(document, '#course-progress');
-  meter.max = courseLessons.length || 8;
-  meter.value = courseCompleted;
-  quizLock.hidden = lessons.length > 0 && completed.size === lessons.length;
-  required(document, '#progress-count').textContent = `${courseCompleted} of ${meter.max} lessons complete`;
-  nav.replaceChildren(...courseLessons.map((item, index) => {
-    const link = routeLink('', lessonUrl(item.id), 'lesson-link');
-    const number = element('span', String(index + 1).padStart(2, '0'), 'lesson-number');
-    number.setAttribute('aria-hidden', 'true');
-    link.append(number, element('span', item.name));
-    if (item.id === (isComparison(lesson?.id) ? comparisonsId : lesson?.id)) link.setAttribute('aria-current', 'page');
-    if (isComplete(item.id)) {
-      const mark = element('span', '✓', 'lesson-done');
-      mark.setAttribute('aria-label', 'Complete');
-      link.append(mark);
-    }
-    return link;
-  }));
-  const studio = required(document, '.studio-nav');
-  if (lesson) studio.setAttribute('aria-current', 'true');
-  else studio.removeAttribute('aria-current');
+  const completed = renderCourseNav(lessons, courseLessons, progress, lesson?.id);
   if (lesson && ui) {
     ui.q('#saved').hidden = isComparison(lesson.id) || !completed.has(lesson.id);
     for (const [id, status] of ui.pairStatuses) status.hidden = !completed.has(id);
@@ -740,9 +692,12 @@ async function applyRoute(focus = false) {
     renderProgress();
     updateView();
     if (focus) main.focus({ preventScroll: true });
-  } catch {
-    if (request !== abort) return;
+  } catch (error) {
+    // `request` is cleared once the lesson data arrives, so an error while drawing the lesson still shows here.
+    // Only a newer navigation (a different request) should silence it.
+    if (request !== undefined && request !== abort) return;
     request = undefined;
+    console.error('Lesson failed to load:', error);
     main.replaceChildren(element('h1', 'This lesson couldn’t load.'), button('Try again', () => { void applyRoute(true); }, 'button primary'));
   }
 }
@@ -782,9 +737,7 @@ document.addEventListener('visibilitychange', () => {
 async function boot() {
   try {
     lessons = await json<LessonSummary[]>('/api/lessons');
-    courseLessons = lessons.flatMap(item => item.id === comparisonsId
-      ? [{ ...item, name: 'Comparisons', category: 'Shortest paths and minimum spanning trees' }]
-      : isComparison(item.id) ? [] : [item]);
+    courseLessons = listCourseLessons(lessons);
     void refreshProgress();
     void applyRoute();
   } catch {

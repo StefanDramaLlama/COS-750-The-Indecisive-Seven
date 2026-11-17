@@ -7,6 +7,10 @@ for (const id of lessonIds) {
   const lesson = getLesson(id);
   const lineIds = new Set(lesson.code.map(line => line.id));
   if (lineIds.size !== lesson.code.length) throw new Error(`Duplicate pseudocode ID for ${id}`);
+  const { intro } = lesson;
+  if (!intro?.problem || !intro.analogy || !intro.pitfall || intro.steps.length < 3 || intro.terms.length < 3) {
+    throw new Error(`Incomplete beginner intro for ${id}`);
+  }
   if (!lesson.examples.some(example => example.kind === 'walkthrough')){ 
     throw new Error(`Missing walkthrough for ${id}`);
   }
